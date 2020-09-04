@@ -1,7 +1,9 @@
 # This file includes the tools for one - dimensional fractal interpolation 
 
-export Interval, FIFInterpolant, fif, getifs, getintervals
+export Interval, AbstractInterpolant, Interpolant, fif, getifs, getintervals
 import Base.∈
+
+abstract type AbstractInterpolant end
 
 """
     $(TYPEDEF)
@@ -44,13 +46,13 @@ One dimensional fractal interpolant
 
     $(TYPEDFIELDS)
 """
-struct FIFInterpolant{T1<:IFS, T2<:AbstractVector{<:Interval}, T3}
+struct Interpolant{T1<:IFS, T2<:AbstractVector{<:Interval}, T3} <: AbstractInterpolant
     ifs::T1         # IFS of interpolations. Transformations are computed from the data 
     intervals::T2   # Just-touching intervals 
-    itp::T3         # FIFInterpolant function 
+    itp::T3         # Interpolant function 
 end 
 
-(interp::FIFInterpolant)(x) = interp.itp(x)
+(interp::Interpolant)(x) = interp.itp(x)
 
 """
     $(SIGNATURES)
@@ -68,7 +70,7 @@ function fif(x::AbstractVector, y::AbstractVector, d::AbstractVector, f0=zero, n
     itp = ∘((wrap for i in 1 : niter)...)
 
     # Return interpolant 
-    FIFInterpolant(ifs, intervals, itp((f0, ifs, intervals))[1])
+    Interpolant(ifs, intervals, itp((f0, ifs, intervals))[1])
 end
 
 """
