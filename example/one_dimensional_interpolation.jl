@@ -10,7 +10,7 @@ y = sin.(2π * x)
 d = 0.1 * ones(length(x) - 1)
 
 # Construct interpolant 
-interp = interpolate(x, y, d)
+interp = fif(x, y, d)
 
 # Plot data 
 xd = collect(xi : 0.01dx : xf)

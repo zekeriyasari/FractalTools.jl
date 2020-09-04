@@ -5,6 +5,6 @@ using LinearAlgebra
 
 include("transformations.jl")
 include("ifs.jl")
-include("integration.jl")
+include("fif.jl")
 
 end # module
