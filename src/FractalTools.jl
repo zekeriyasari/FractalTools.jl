@@ -1,5 +1,10 @@
 module FractalTools
 
-greet() = print("Hello World!")
+using DocStringExtensions
+using LinearAlgebra 
+
+include("transformations.jl")
+include("ifs.jl")
+include("integration.jl")
 
 end # module

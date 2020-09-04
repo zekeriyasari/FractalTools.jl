@@ -3,6 +3,10 @@ uuid = "b405c40b-1ee4-4202-972e-f2b10e481766"
 authors = ["Zekeriya Sarı", "Gizem Kalender"]
 version = "0.1.0"
 
+[deps]
+DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
 [compat]
 julia = "1.5"
 
