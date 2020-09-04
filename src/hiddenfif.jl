@@ -8,7 +8,7 @@ export hiddenfif, gethiddenifs, wraphidden
 Interpolates the data pairs (xi, yi) for xi ∈ `x` and yi ∈ y. `f0` is the initial function and `niter` is the number of iterations.
 """
 function hiddenfif(x::AbstractVector, y::AbstractVector, z::AbstractVector,  
-    d::AbstractVector, h::AbstractVector, l::AbstractVector, m::AbstractVector, 
+    d::AbstractVector, h::AbstractVector, l::AbstractVector, m::AbstractVector; 
     f0=x->[0., 0.], niter::Int=5)
     # Construct IFS 
     ifs = gethiddenifs(x, y, z, h, d, l, m)

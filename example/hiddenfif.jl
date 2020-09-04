@@ -21,5 +21,5 @@ interp = hiddenfif(x, y, z, d, h, l, m)
 xd = collect(xi : 0.01dx : xf)
 yd = interp.(xd)
 plot(xd, getindex.(yd, 1))
-scatter!(x, y, marker=(:circle, 5))
+scatter!(x, y, marker=(:circle, 2))
 
