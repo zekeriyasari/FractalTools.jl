@@ -27,7 +27,7 @@ end
 
     $(SIGNATURES)
 
-Returns the IFS corresponding to interpolation data `x`, `y`. `d` is the scaling parameters.
+Returns the IFS corresponding to interpolation data `x`, `y`. `d` is the scaling parameters. See the notes on [docs](https://zekeriyasari.github.io/FractalTools.jl/stable/manual/one_dimensional_interpolation/#D-Hidden-Fractal-Interpolation)
 """
 function gethiddenifs(x::AbstractVector, y::AbstractVector, z::AbstractVector,  
     d::AbstractVector, h::AbstractVector, l::AbstractVector, m::AbstractVector)
