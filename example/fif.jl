@@ -7,7 +7,7 @@ using Plots
 xi, dx, xf = 0, 0.1, 1
 x = collect(xi : dx : xf) 
 y = sin.(2π * x)
-d = 0.1 * ones(length(x) - 1)
+d = 0.01 * ones(length(x) - 1)
 
 # Construct interpolant 
 interp = fif(x, y, d)
