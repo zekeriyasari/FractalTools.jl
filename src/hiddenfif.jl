@@ -31,7 +31,6 @@ Returns the IFS corresponding to interpolation data `x`, `y`. `d` is the scaling
 """
 function gethiddenifs(x::AbstractVector, y::AbstractVector, z::AbstractVector,  
     d::AbstractVector, h::AbstractVector, l::AbstractVector, m::AbstractVector)
-    # TODO: Check the end points of the transformations
     K = 1 / (x[1] - x[end])
     Ω = [1 -1; -x[end] x[1]]
     X = [x[1 : end - 1, :]'; x[2 : end, :]']
