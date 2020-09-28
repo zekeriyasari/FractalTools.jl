@@ -8,7 +8,7 @@ xi, dx, xf = 0, 0.1, 1
 x = collect(xi : dx : xf) 
 y = sin.(2π * x)
 z = cos.(2π * x)
-u = 0.9
+u = 0.00
 d = u * ones(length(x) - 1)
 h = u * ones(length(x) - 1)
 l = u * ones(length(x) - 1)
@@ -24,7 +24,7 @@ yd = interp.(xd)
 
 plt = plot(layout=(2,1))
 plot!(xd, getindex.(yd, 1), label="original", subplot=1)
-scatter!(x, y, marker=(:circle, 2), subplot=1)
+scatter!(x, y, marker=(:circle, 5), subplot=1)
 plot!(xd, getindex.(yd, 2), label="hidden", subplot=2)
-scatter!(x, z, marker=(:circle, 2), subplot=2)
+scatter!(x, z, marker=(:circle, 5), subplot=2)
 
