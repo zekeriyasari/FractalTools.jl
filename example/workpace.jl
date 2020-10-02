@@ -18,7 +18,8 @@ m = u * ones(length(x) - 1)
 
 plt = plot(layout=(5,1))
 for niter in 1 : 5
-    interp = hiddenfif(x, y, z, d, h, l, m)
+    interp = fif(x, y, d, niter=1)
+    # interp = hiddenfif(x, y, z, d, h, l, m)
     xd = collect(xi : 0.1dx : xf)
     plot!(xd, getindex.(interp.(xd), 1), subplot=niter)
     scatter!(x, y, subplot=niter)
