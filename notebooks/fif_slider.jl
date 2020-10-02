@@ -17,25 +17,27 @@ end
 # Load packages 
 begin 
 	using Pkg 
-	Pkg.activate(mktempdir())
-	Pkg.add("Plots")
-	Pkg.develop(path="/home/sari/.julia/dev/FractalTools/")
+	Pkg.activate(joinpath(Pkg.envdir(), "dev-env"))
+	using FractalTools
 	using Plots
 	plotly()
-	using FractalTools
+	default(:label, "")
+	default(:lw, 2);
 end 
 
 # ╔═╡ 24b8a340-01b5-11eb-0551-318932fe4a10
 @bind d html"<input type=range min=0 max=1 step=1e-1>"
 
 # ╔═╡ 2caf47f8-047f-11eb-1f15-db8e661dc9ce
-@bind niter html"<input type=range min=1 max=100 step=1>"
+@bind niter html"<input type=range min=1 max=10 step=1>"
 
 # ╔═╡ 69dbf05e-047f-11eb-3d6e-892350bec24f
 niter, d
 
 # ╔═╡ 402f7b62-01b5-11eb-2789-7bdb04c0d694
 begin
+	f(xi) = sin(2π * xi)
+	
 	# Consrucct data 
 	xi, dx, xf = 0, 0.1, 1 
 	x = collect(xi : dx : xf) 
@@ -46,40 +48,11 @@ begin
 	interp = fif(x, y, dvar, niter=niter) 
 	
 	# Plots 
-	plt = plot()
 	xd = collect(xi : 0.1dx : xf) 
+	plot(xd, f.(xd))
 	yd = interp.(xd)
 	plot!(xd, yd)
 	scatter!(x, y, marker=(:circle, 3))
-end
-
-# ╔═╡ 927c79ea-0482-11eb-2562-d1934e61f65e
-@bind d_hidden html"<input type=range min=0 max=1 step=1e-1>"
-
-# ╔═╡ 99eeb9cc-0482-11eb-3df1-b3a85faad5a6
-@bind niter_hidden html"<input type=range min=1 max=100 step=1>"
-
-# ╔═╡ 1078363c-0482-11eb-3b0a-e10a7b7dbd92
-begin
-	# Consrucct data 
-	xi_hidden, dx_hidden, xf_hidden = 0, 0.1, 1 
-	x_hidden = collect(xi_hidden : dx_hidden : xf_hidden) 
-	y_hidden = sin.(2π * x_hidden) 
-	z_hidden = cos.(2π * x_hidden)
-	dvar_hidden = d * ones(length(x_hidden) - 1)
-	h_hidden = d_hidden * ones(length(x_hidden) - 1)
-	l_hidden = d_hidden * ones(length(x_hidden) - 1)
-	m_hidden = d_hidden * ones(length(x_hidden) - 1)
-	
-	# Interplate
-	interp_hidden = hiddenfif(x_hidden, y_hidden, z_hidden, dvar_hidden, h_hidden, l_hidden, m_hidden,niter=niter_hidden) 
-	
-	# Plots 
-	plt_hidden = plot()
-	xd_hidden = collect(xi_hidden : 0.1dx_hidden : xf_hidden) 
-	yd_hidden = interp_hidden.(xd_hidden)
-	plot!(xd_hidden, getindex.(yd_hidden, 1))
-	scatter!(x_hidden, y_hidden, marker=(:circle, 3))
 end
 
 # ╔═╡ Cell order:
@@ -88,6 +61,3 @@ end
 # ╠═2caf47f8-047f-11eb-1f15-db8e661dc9ce
 # ╠═69dbf05e-047f-11eb-3d6e-892350bec24f
 # ╠═402f7b62-01b5-11eb-2789-7bdb04c0d694
-# ╠═927c79ea-0482-11eb-2562-d1934e61f65e
-# ╠═99eeb9cc-0482-11eb-3df1-b3a85faad5a6
-# ╠═1078363c-0482-11eb-3b0a-e10a7b7dbd92

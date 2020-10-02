@@ -2,19 +2,23 @@
 
 using FractalTools 
 using Plots 
+default(:size, (600,500))
+theme(:default)
 
-# Generate interpolation data 
+# Generate interpolation data
+f(x) = sin(2π*x) 
 xi, dx, xf = 0, 0.1, 1
 x = collect(xi : dx : xf) 
-y = sin.(2π * x)
-d = 0.0 * ones(length(x) - 1)
+y = f.(x)
+d = 0.1 * ones(length(x) - 1)
 
 # Construct interpolant 
-interp = fif(x, y, d)
+interp = fif(x, y, d, niter=10)
 
 # Plot data 
-xd = collect(xi : 0.01dx : xf)
+xd = collect(xi : 0.1dx : xf)
 yd = interp.(xd)
-plot(xd, yd)
-scatter!(x, y, marker=(:circle, 5))
-
+plt = plot(xd, yd)
+plot!(xd, f.(xd))
+scatter!(x, y, marker=(:circle, 2))
+plt 
