@@ -62,15 +62,17 @@ associated `z` with the vertical scling factors `α`, initial function `func0`,
 number of iterations `num_iter`. If `get_coeffs` is `true`, coefficients of the
 IFS orresponding to dataset `mesh` and `z` are returned.
 """
-function hiddenfis(regions::AbstractVector{PyCall.PyObject}, z::AbstractVector{<:AbstractVector}; 
-	α::Real=0.1, func0::Function=(xi,yi)->0., num_iter::Int=10, get_coeffs::Bool=false)
+function hiddenfis(regions::AbstractVector{PyCall.PyObject}, z::AbstractVector{<:AbstractVector}, 
+	t::AbstractVector{<:AbstractVector}; 
+	α7::Real=0.1, α8::Real=0.1, α11::Real=0.1, α12::Real=0.1 , func0::Function=(xi,yi)->[0., 0.], num_iter::Int=10, 
+	get_coeffs::Bool=false)
 	# Find piecewise interpolation functions for each region.
 	num_regions = length(regions)
 	funcs = Vector{Function}(undef, num_regions)  # Piecewise interpolation function.
 	if get_coeffs
 		coeffs = Vector{Array{Float64, 3}}(undef, num_regions)
 		for k = 1 : num_regions
-            fs, cs = hiddenfis(regions[k], z[k], α=α, func0=func0, 
+            fs, cs = hiddenfis(regions[k], z[k], t[k], α7=α7, α8=α8, α11=α11, α12=α12, func0=func0, 
 				num_iter=num_iter, get_coeffs=true)
 			funcs[k] = fs
 			coeffs[k] = cs
@@ -79,7 +81,7 @@ function hiddenfis(regions::AbstractVector{PyCall.PyObject}, z::AbstractVector{<
 	end
 
 	for k = 1 : num_regions
-		funcs[k] = hiddenfis(regions[k], z[k], α=α, func0=func0, num_iter=num_iter, get_coeffs=false)
+		funcs[k] = hiddenfis(regions[k], z[k], t[k], α7=α7, α8=α8, α11=α11, α12=α12, func0=func0, num_iter=num_iter, get_coeffs=false)
 	end
 	return (xd, yd) -> funcs[find_region(regions, xd, yd)][1](xd, yd)
 end
