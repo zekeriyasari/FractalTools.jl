@@ -97,9 +97,9 @@ function coefficients(mesh::PyCall.PyObject, z::AbstractVector{<:Real}, α::Real
     # construct P matrix and zi vector.
 
     if startswith(region_type, "triangular")
-		i, apex_coords = find_apex(mesh, coordinates=true)
-        P = [mesh.x[i] mesh.y[i] ones(3, 1)]
-        zi = z[i]
+		j, apex_coords = find_apex(mesh, coordinates=true)
+        P = [mesh.x[j] mesh.y[j] ones(3, 1)]
+        zj = z[j]
     elseif startswith(region_type, "polygonal")
         # Find P matrix and its inverse.
         _, apex_coords = find_apex(mesh, coordinates=true)
@@ -117,9 +117,9 @@ function coefficients(mesh::PyCall.PyObject, z::AbstractVector{<:Real}, α::Real
 	num_triangles = size(mesh.triangles, 1)
 	coeffs = zeros(3, 3, num_triangles)
 	for i = 1 : num_triangles
-		j = mesh.triangles[i, :] .+ 1  # Node indices
-	    xj, yj, zj = mesh.x[j], mesh.y[j], z[j]
-		coeffs[:, :, i] = P \ [xj yj (zj - α * zi)]
+		k = mesh.triangles[i, :] .+ 1  # Node indices
+	    xi, yi, zi = mesh.x[k], mesh.y[k], z[k]
+		coeffs[:, :, i] = P \ [xi yi (zi - α * zj)]
 	end 
 	if get_apex_coordinates
 		return coeffs, apex_coords

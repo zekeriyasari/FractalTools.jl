@@ -16,6 +16,7 @@ include("ifs.jl")
 include("fif.jl")
 include("hiddenfif.jl")
 include("fis.jl")
+include("hiddenfis.jl")
 
 function __init__()
     global spt = pyimport("scipy.spatial")
