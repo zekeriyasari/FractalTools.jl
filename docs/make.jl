@@ -6,11 +6,11 @@ makedocs(;
     modules=[FractalTools],
     format=Documenter.HTML(),
     pages=[
-        
+        "API" => "index.md",
         "Notes" => [
             "1D Fractal Interpolation" => "manual/one_dimensional_interpolation.md",
+            "1D Fractal Integration" => "manual/one_dimensional_integration.md",
             ],
-        "API" => "index.md",
         ],
     repo="https://github.com/zekeriyasari/FractalTools.jl/blob/{commit}{path}#L{line}",
     sitename="FractalTools.jl",
