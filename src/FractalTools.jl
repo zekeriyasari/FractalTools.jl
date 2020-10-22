@@ -13,10 +13,12 @@ using NearestNeighbors
 
 include("transformations.jl")
 include("ifs.jl")
-include("fif.jl")
-include("hiddenfif.jl")
-include("fis.jl")
-include("hiddenfis.jl")
+include("interpolation/fif.jl")
+include("interpolation/hiddenfif.jl")
+include("interpolation/fis.jl")
+include("interpolation/hiddenfis.jl")
+include("integration/integration1d.jl")
+include("integration/integration2d.jl")
 
 function __init__()
     global spt = pyimport("scipy.spatial")
