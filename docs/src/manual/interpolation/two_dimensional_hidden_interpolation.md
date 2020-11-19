@@ -107,10 +107,4 @@ Inspired by the reasoning given in Theorem 1, we propose the following conjectur
 
 !!! note 
     
-    Consider the transformation ``L`` shown in the figure below where $\Omega_n$ and $\Omega \subset \mathbb{R}^{2}$ and the IFS $\mathcal{I}$ in (\ref{eq: IFS}), let $(\mathcal{F}, d)$ be a complete metric space such that
-
-    
-    
-    
-
-	
+    Consider the transformation ``L`` shown in the figure below where $\Omega_n$ and $\Omega \subset \mathbb{R}^{2}$ and the IFS $\mathcal{I}$ in (\ref{eq: IFS}), let $(\mathcal{F}, d)$ be a complete metric space such that	
