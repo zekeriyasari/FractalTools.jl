@@ -10,6 +10,7 @@ makedocs(;
         "Notes" => [
             "1D Fractal Interpolation" => "manual/one_dimensional_interpolation.md",
             "1D Fractal Integration" => "manual/one_dimensional_integration.md",
+            "2D Fractal Interpolation" => "manual/two_dimensional_interpolation.md",
             ],
         ],
     repo="https://github.com/zekeriyasari/FractalTools.jl/blob/{commit}{path}#L{line}",
