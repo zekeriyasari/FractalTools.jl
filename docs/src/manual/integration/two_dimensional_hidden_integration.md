@@ -111,7 +111,7 @@ where
 W_{11} &= \sum_{n = 1}^K \alpha_7^n |J_{L_n}|  \\ 
 W_{12} &= \sum_{n = 1}^K \alpha_8^n |J_{L_n}|  \\ 
 W_{21} &= \sum_{n = 1}^K \alpha_{11}^n |J_{L_n}|  \\ 
-W_{11} &= \sum_{n = 1}^K \alpha_{12}^n |J_{L_n}| 
+W_{12} &= \sum_{n = 1}^K \alpha_{12}^n |J_{L_n}| 
 \end{aligned}
 ```
 Hence we can write, 
