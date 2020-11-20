@@ -1,116 +1,219 @@
-## One Dimensional Fractal Integration 
+## Two Dimensional Fractal Integration 
 
-### Fractal Interpolation Coefficients
-Let $N > 2$ be natural number. Let $x_0 < x_1 < \ldots < x_N$ be real numbers. Let $I = [x_0, x_N]$, and $I_i = [x_i, x_{i + 1}]$ for $i = 0, \ldots, N - 1$ be the subintervals of $I$. Consider homeomorphisms $L_i(x): I \mapsto I_i$ such that
+Consider the data points $(x_i, y_i), \; i = 1, 2, \ldots, N$ triangulized over a triangular domain $\Omega \subset \mathbb{R}^n$. Associated with the data point $(xi, yi)$ we consider real values $z_i \in \mathbb{R}, \; i = 1, 2, \ldots, N$. In addition, we consider additional real data values $t_i \; i = 1, 2, \ldots, N$. Our aim is to find and interpolation function, i.e., interpolant $f: \Omega \mapsto \mathbb{R}^2$ such that $(z_i, t_i) = f(x_i, y_i), \; i = 1, 2, \ldots, N$.
+
+Consider the iterated function system $\mathcal{I} = \{\Omega \times \mathbb{R}^n; w_n, n = 1, 2, \ldots, K\}$ where 
 ```math
-\begin{aligned}
-|L_i(x_j) - L_i(x_k)| & \leq s_i |x_j - x_k| \\
-L_i(x_0) = x_i, &\quad L_i(x_N) = x_{i + 1}  
-\end{aligned}
+w_n(x, y, z, t) = 
+\begin{bmatrix} 
+    \alpha_1^n & \alpha_2^n & 0 & 0 \\ 
+    \alpha_3^n & \alpha_4^n & 0 & 0 \\ 
+    \alpha_5^n & \alpha_6^n & \alpha_7^n & \alpha_8^n \\ 
+    \alpha_9^n & \alpha_{10}^n & \alpha_{11}^n & \alpha_{12}^n 
+\end{bmatrix}
+\begin{bmatrix}
+    x \\ y \\ z \\ t 
+\end{bmatrix}
++ 
+\begin{bmatrix} 
+    \beta_1^n \\
+    \beta_2^n \\
+    \beta_3^n \\
+    \beta_4^n
+\end{bmatrix}
 ```
-for all $x_j, x_k \in I, \; 0 \leq s_i < 1$. Consider $N$ continuous transformations $F_i : I \times \mathbb{R} \mapsto \mathbb{R}$ such that 
-```math
-\begin{aligned}
-|F_i(x_j, y_j) - F_i(x_j, y_k)| &\leq r_i |y_j - y_k| \\
-F_i(x_0, y_0) = y_i &\quad F_i(x_N, y_N) = y_{i + 1} 
-\end{aligned}
-```
-for $x_j \in I, \; y_j, y_k \in \mathbb{R}, \; 0 \leq r_i < 1$. Let $w_i : I \times \mathbb{R} \mapsto I_i \times \mathbb{R}$ such that
-```math
-w_i(x, y) = (L_i(x), F_i(x, y)), \; i = 1, \ldots, N
-```
-The followings hold for the IFS $\mathcal{I} = \{ I \times \mathbb{R}; w_i, \; i = 1, \ldots, N \}$:
-
-* It has a unique attractor $G$ which is the graph of a continuous function $f:I\mapsto \mathbb{R}$ satisfying $f(x_i) = y_i$ for $i = 0, \ldots, N$.
-* Let $(\mathcal{F}, d)$ be a complete metric space such that $\mathcal{F} = \{ \tilde{f} \in \mathcal{C}.[^1] (I): \tilde{f}(x_0) = y_0, \; \tilde{f}(x_N) = y_N \}$ with the metric $d(\tilde{f}_1, \tilde{f}_2) = max\{ |\tilde{f}_1(x) - \tilde{f}_2(x)| : x \in I \}$. Let $M: \mathcal{F} \mapsto \mathcal{F}$ be a mapping defined by $(M\tilde{f})(x) = F_i(L_i^{-1}(x), \tilde{f}(L_i^{-1}(x)), \; x \in I$ for $i = 0, \ldots, N$. Then, $M$ has unique fixed point $f$ such that $f = \lim_{n \mapsto \infty} M^n(\tilde{f})$ for any $\tilde{f} \in \mathcal{F}$ and $f$ satisfies the condition given above.
-
-The function $f$ whose graph is the attractor of the IFS $\mathcal{I}$ and which is the fixed point of the mapping $M$ given in Theorem above is called a fractal interpolation function (FIF).
-
-### One Dimensional Fractal Integration 
-It is also possible to calculate the definite integrals of the fractal interpolation functions over the interpolation domain. The crucial result here is that the value of the integrals does not depend on the explicit formula of the interpolation function, but depends on the coefficients of the transformations that used to construct the interpolant. 
-
-We first start with
+We can divide the transformation $w_n, \; n = 1, 2, \ldots, K$ as follows,
 ```math 
-\begin{aligned}
-  I =  \int_{I} f(x)dx = \int_{x_0}^{x_N} f(x) dx
-\end{aligned}
-```
-where ``f`` is the fractal interpolation function, i.e. the interpolant. Since ``f(x)`` is the fixed point of ``Tf``, we have ``f(x) = Tf(x)``. Then,
-```math
-\begin{aligned}
-    I
-    = \int_{x_0}^{x_N} Tf(x) dx
-\end{aligned}
-```
-Since ``Tf(x) = F_n(L_n^{-1}(x), f(L_n^{-1}))``, where, in case one dimensional integration, 
-```math
-\begin{aligned}
-    L_n(x) &= \alpha_1^n x + \beta_1^n \\
-    F_n(x, y) &= \alpha_2^n x + \alpha_3^n y + \beta_2^n \\
-\end{aligned}
-```
-we have,
-```math
-\begin{aligned}
-    I
-    = \int_{x_0}^{x_N} \left( \alpha_2^n L_n^{-1}(x) + \alpha_3^n f(L_n^{-1}(x)) + \beta_2^n \right) dx
-\end{aligned}
-```
-We can divide integral ``I`` into multiple subintervasl ``I_n``,
-```math
-\begin{aligned}
-    I  
-    = \sum_{n=1}^N \int_{x_{n-1}}^{x_n} \left( \alpha_2^n L_n^{-1}(x) + \alpha_3^n f(L_n^{-1}(x)) + \beta_2^n \right) dx
-    = \sum_{n=1}^N \int_{I_n} \left( \alpha_2^n L_n^{-1}(x) + \alpha_3^n f(L_n^{-1}(x)) + \beta_2^n \right) dx
-\end{aligned}
-```
-To make the right hand side of the above equation look like the left hand side, we need to apply a suitable transformation. That is, we need to transform the integral ``\int_{I_n}`` over the subinterval ``I_n`` to the interpolation interval ``I``. 
-
-!!! note
-
-    Consider the transformation ``L`` shown in the figure below where $\Omega_{n} \subset \mathbb{R}^{2}$ and $\Omega \subset \mathbb{R}^{2}$. 
-    ![1d_transformations](../../assests/1D_transformations.svg)
-
-    We have the following equality for the definite integrals.
-    ```math
-    \begin{aligned}
-        I
-        = \int_{\Omega_n} h(x) dx
-        = \int_{\Omega} h(L(\bar{x})) |J_L|d \bar{x} 
-    \end{aligned}
-    ```
-    where $|J_L|$ is the determinant of the Jacobian of the transformation $L$.
-
-Using the note given above, we can write 
-```math 
-\begin{aligned}
-    I &= \sum_{n=1}^N \int_{I} \left( \alpha_2^n \bar{x} + \alpha_3^n f(\bar{x}) + \beta_2^n \right) d \bar{x} \\
-        &= \sum_{n=1}^N \int_{I} \left( \alpha_2^n \bar{x} + \beta_2^n \right) d \bar{x}  +
-        \sum_{n=1}^N \int_{I} \left( \alpha_3^n f(\bar{x}) \right) d \bar{x} \\
-        &= \sum_{n=1}^N \int_{I} \left( \alpha_2^n \bar{x} + \beta_2^n \right) d \bar{x}  +
-        \sum_{n=1}^N \left( \alpha_3^n \right) \int_{I} f(\bar{x}) d \bar{x} \\
-        &= \sum_{n=1}^N \int_{I} \left( \alpha_2^n \bar{x} + \beta_2^n \right) d \bar{x}  +
-        \sum_{n=1}^N \left( \alpha_3^n \right) I \\
-\end{aligned}
-```
-from which we have, 
-```math 
-    I = \dfrac{K_1}{1-K_2}
-   
+w_n(x, y, z, t) = (L_n(x, y), F_n(x, y, z, t))
 ```
 where 
-```math
-    \begin{aligned}
-    K_1 &= \sum_{n=1}^N \int_{I} \left( \alpha_2^n \bar{x} + \beta_2^n \right) d \bar{x} \\
-    K_2 &= 1 - \sum_{n=1}^N \alpha_3^n 
-    \end{aligned}
+```math 
+L_n(x, y) = 
+\begin{bmatrix} 
+    \alpha_1^n & \alpha_2^n \\ 
+    \alpha_3^n & \alpha_4^n 
+\end{bmatrix}
+\begin{bmatrix}
+    x \\ y 
+\end{bmatrix}
++ 
+\begin{bmatrix} 
+    \beta_1^n \\
+    \beta_2^n 
+\end{bmatrix}
+```
+and 
+```math 
+F_n(x, y, z, t) = 
+\begin{bmatrix} 
+    \alpha_5^n & \alpha_6^n & \alpha_7^n \alpha_8^n \\
+    \alpha_9^n & \alpha_{10}^n & \alpha_{11}^n \alpha_{12}^n \\
+\end{bmatrix}
+\begin{bmatrix}
+    x \\ y \\ z \\ t 
+\end{bmatrix}
++ 
+\begin{bmatrix}
+    \beta_n^3 \\ \beta_n^4
+\end{bmatrix}
+```
+Given the free parameters $\alpha_7^n, \alpha_8^n, \alpha_{10}^n, \alpha_{12}^n, \; n = 1, \ldots, K$, the remaining coefficients of the transformations $w_n, \; n = 1, 2, \ldots, K$ can be found from the boundary conditions, 
+```math 
+L_n(\tilde{x}_j, \tilde{y}_j) = (x_k, y_k) \quad k = 1, 2, \ldots, K \quad j = 1, 2, 3
+```
+where the $\{(\tilde{x}_j, \tilde{y}_j), \; j = 1, 2, 3\}$ are the set of the vertex points of the interpolation $\Omega$ and $\{(x_j, y_j), \; j = 1, 2, 3\}$ are the set of vertex points of the triangle $\Omega_k \; k = 1, 2, \ldots, K$ where $K$ is the number of triangles in $\Omega$. Here the free variables $t_n, \; n = 1, 2, \ldots, N$ and the $\alpha_7^n, \alpha_8^n, \alpha_{10}^n, \alpha_{12}^n$ are called the \emph{hidden variables.}
+
+Then the graph of the interpolant $f$ is the attractor of the IFS $\mathcal{I}$. Furthermore, the interpolant $f$ is the fixed of a mapping $Tf: \mathbb{F} \mapsto \mathbb{F}$ where $\mathbb{F}$ is the set of continuous functions $g: \Omega \mapsto \mathbb{R}^2$ such that 
+```math 
+Tf(x, y) = F_n(L_n^{-1}(x, u), f(L_n^{-1}(x, u)))
 ```
 
-It worths pointing out that the value $I$ of the integration depends on just the coefficients of the transformations, not on the explicit expression of the interpolation function $f$.
-
-## Two Dimensional Fractal Integration
-```@raw html
-<center>
-    <img src="../../assests/transformation.svg" alt="model" width="75%"/>
-</center>
+The definite integral of the interpolant $f$ over the interpolation domain $\Omega$ can be computed by using just the transformation coefficients. To this end, let us start, 
+```math 
+I = 
+\int_\Omega f(x, y) dx dy = 
+\begin{bmatrix}
+    I_1 \\ 
+    I_2 
+\end{bmatrix}
 ```
+Since $f$ is the fixed point of the transformation $Tf$, then $f(x,y) = Tf(x, y)$, then 
+```math 
+I = 
+\int_\Omega Tf(x, y) dx dy = \sum_{n=1}^K \int_{\Omega^n} F_n(L_n^{-1}(x, y), f(L_n^{-1}(x, y))) dx dy
+```
+Using the transformation $(x, y) = L_n(\tilde{x}, \tilde{y})$, we can write 
+```math 
+\begin{aligned}
+I &= 
+\begin{bmatrix} 
+    I_1 \\ 
+    I_2 
+\end{bmatrix}
+\int_\Omega F_n(\tilde{x}, \tilde{y}, f(\tilde{x}, \tilde{y})) |J_{L_n}| d\tilde{x} d\tilde{y} \\ 
+&= 
+\begin{bmatrix}
+\int_\Omega (\alpha_5^n \tilde{x} + \alpha_6^n \tilde{y} + \alpha_7^n f_1(\tilde{x}, \tilde{y}) + \alpha_8^n f_2(\tilde{x}, \tilde{y}) + \beta_3^n) d\tilde{x} d\tilde{y} \\
+\int_\Omega (\alpha_9^n \tilde{x} + \alpha_{10}^n \tilde{y} + \alpha_{11}^n f_1(\tilde{x}, \tilde{y}) + \alpha_{12}^n f_2(\tilde{x}, \tilde{y}) + \beta_4^n) d\tilde{x} d\tilde{y} \\
+\end{bmatrix} \\ 
+&= 
+\begin{bmatrix} 
+\Lambda_1 + W_{11} I_1 + W_{12} I_2 \\ 
+\Lambda_2 + W_{12} I_1 + W_{22} I_2  
+\end{bmatrix}
+\end{aligned}
+```
+where 
+```math 
+\begin{aligned}
+\Lambda_{1} &= \sum_{n = 1}^K \int_\Omega (\alpha_5^n \tilde{x} + \alpha_6^n \tilde{y} + \beta_3^n) |J_{L_n}| d\tilde{x} d\tilde{y}  \\
+\Lambda_{2} &= \sum_{n = 1}^K \int_\Omega (\alpha_9^n \tilde{x} + \alpha_{10}^n \tilde{y} + \beta_4^n) |J_{L_n}| d\tilde{x} d\tilde{y}  \\ 
+W_{11} &= \sum_{n = 1}^K \alpha_7^n |J_{L_n}|  \\ 
+W_{12} &= \sum_{n = 1}^K \alpha_8^n |J_{L_n}|  \\ 
+W_{21} &= \sum_{n = 1}^K \alpha_{11}^n |J_{L_n}|  \\ 
+W_{11} &= \sum_{n = 1}^K \alpha_{12}^n |J_{L_n}| 
+\end{aligned}
+```
+Hence we can write, 
+```math 
+\begin{aligned}
+\begin{bmatrix} 
+1 - W_{11} & -W_{12} \\ 
+-W_{12} & 1 - W_{22} 
+\end{bmatrix} 
+\begin{bmatrix}
+    I_1 \\ 
+    I_2
+\end{bmatrix} 
+&= 
+\begin{bmatrix}
+\Lambda_1 \\ 
+\Lambda_2
+\end{bmatrix} \\ 
+\begin{bmatrix} 
+\Gamma_{11} & \Gamma_{12} \\ 
+\Gamma_{21} & \Gamma_{22} \\ 
+\end{bmatrix}
+\begin{bmatrix} 
+I_1 \\ I_2
+\end{bmatrix}
+&= 
+\begin{bmatrix} 
+\Lambda_1 \\ 
+\Lambda_2
+\end{bmatrix}
+\end{aligned}
+```
+By solving this system of equations,
+```math 
+\begin{aligned}
+I_1 &= \dfrac{\Lambda_1 \Gamma_{22} - \Lambda_2 \Gamma_{12}}{\Gamma_{11} \Gamma_{22} - \Gamma_{12} \Gamma_{21}} \\ 
+I_2 &= \dfrac{\Lambda_2 \Gamma_{11} - \Lambda_1 \Gamma_{21}}{\Gamma_{11} \Gamma_{22} - \Gamma_{12} \Gamma_{21}} 
+\end{aligned}
+```
+We have, 
+```math 
+\begin{aligned} 
+\Lambda_{1} &= \int_\Omega (\alpha_5^n \tilde{x} + \alpha_6^n \tilde{y} + \beta_3^n) |J_{L_n}| d\tilde{x} d\tilde{y} \\ 
+\Lambda_{2} &= \int_\Omega (\alpha_9^n \tilde{x} + \alpha_{10}^n \tilde{y} + \beta_4^n) |J_{L_n}| d\tilde{x} d\tilde{y} 
+\end{aligned}
+```
+These integrals are over the triangular integration domain $\Omega$. To ease the evaluation of these integral, we can transform the integral over a triangular domain $\Theta$ consisting of the vertex points $(0,0), (0, 1), (1, 0)$ using a transformation of the form 
+```math 
+T(\bar{x}, \bar{y}) = 
+\begin{bmatrix} 
+    \tilde{x} \\ \tilde{y} 
+\end{bmatrix} = 
+\begin{bmatrix}
+a_{11} & a_{12} \\ 
+a_{21} & a_{22} 
+\end{bmatrix}
+\begin{bmatrix} 
+    \bar{x} \\ \bar{y} 
+\end{bmatrix}
++ 
+\begin{bmatrix} 
+    b_1 \\ b_2 
+\end{bmatrix}
+```
+Then we have, 
+```math 
+\begin{aligned} 
+\Lambda_{11} 
+    &= \sum_{n = 1}^K  \int_\Delta \left( \alpha_5^n (a_1 \bar{x} + a_2 \bar{y} + b_1) + \alpha_6^n (a_3 \bar{x} + a_4 \bar{y} + b_2) + \beta_3^n  \right) |J_{L_n}| |J_T| d\bar{x} d\bar{y}
+\end{aligned}
+```
+Since, 
+```math 
+\begin{aligned} 
+\int_\Delta (a_1 \bar{x} + a_2 \bar{y} + b_1) d\bar d\bar{x} \\
+    &= \int_{0}^{1} \int_{0}^{-\bar{x} + 1}  (a_1 \bar{x} + a_2 \bar{y} + b_1) d\bar d\bar{x}  \\ 
+    &= \int_{0}^{1} \left( a_1 \bar{x} (-\bar{x} + 1}) + a_2 \dfrac{(-\bar{x} + 1)^2}{2} + b_1(-\bar{x} + 1) \right)d\bar{x} \
+    &= \dfrac{1}{6} (a_1 + a_2 + 3 b_1) 
+\end{aligned}
+```
+we can write $\Lambda_{1}$
+```math 
+\begin{aligned} 
+\Lambda_{1} = |J_T| \left( 
+    \dfrac{a_1 + a_2 + 3 b_1}{6} \sum_{n = 1}^K \alpha_5^n |J_{L_n}| + 
+    \dfrac{a_3 + a_4 + 3 b_2}{6} \sum_{n = 1}^K \alpha_6^n |J_{L_n}| + 
+    \sum_{n = 1}^K \beta_3^n |J_{L_n}|  
+    \right) 
+\end{aligned}
+```
+and 
+```math 
+\begin{aligned} 
+\Lambda_{2} = |J_T| \left( 
+    \dfrac{a_1 + a_2 + 3 b_1}{6} \sum_{n = 1}^K \alpha_9^n |J_{L_n}| + 
+    \dfrac{a_3 + a_4 + 3 b_2}{6} \sum_{n = 1}^K \alpha_{10}^n |J_{L_n}| + 
+    \sum_{n = 1}^K \beta_4^n |J_{L_n}|  
+    \right) 
+\end{aligned}
+```
+Lastly, we have 
+```math 
+    |J_{L_n}| = |\alpha_1^n \alpha_4^n - \alpha_2^n \alpha_3^n|
+```
+Thus, the definite integral of the interpolant $f$ can be evaluated using the just the coefficients of the transformations. 
