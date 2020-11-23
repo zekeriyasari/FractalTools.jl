@@ -107,10 +107,3 @@ where
 ```
 
 It worths pointing out that the value $I$ of the integration depends on just the coefficients of the transformations, not on the explicit expression of the interpolation function $f$.
-
-## Two Dimensional Fractal Integration
-```@raw html
-<center>
-    <img src="../../assests/transformation.svg" alt="model" width="75%"/>
-</center>
-```
