@@ -11,8 +11,9 @@ using HCubature
 using LinearAlgebra
 using NearestNeighbors
 
-include("transformations.jl")
-include("ifs.jl")
+include("ifs/transformations.jl")
+include("ifs/ifs.jl")
+include("ifs/prototypes.jl")
 include("interpolation/fif.jl")
 include("interpolation/hiddenfif.jl")
 include("interpolation/fis.jl")
