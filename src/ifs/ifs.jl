@@ -13,10 +13,13 @@ Iterated fucntion sytem (IFS)
     $(TYPEDFIELDS)
 """
 struct IFS{T1, T2}
+    "Transformations"
     ws::T1 
+    "Probabilities of the transformations"
     probs::T2
     function IFS(ws::AbstractVector{T1}, probs::AbstractVector{T2}) where {T1<:Transformation, T2<:Real} 
-        # Note: For the floating point numbers, aproximation(≈), instead of exact equal (==), should be considered
+        all(dimension.(ws) .== dimension(ws[1])) || 
+            throw(DimensionMismatch("Dimensions of transformations `ws` does not match"))
         sum(probs) ≈ 1 || throw(ArgumentError("Sum of probabilities must be 1."))
         new{typeof(ws), typeof(probs)}(ws, probs) 
     end
@@ -220,6 +223,10 @@ end
 # Load worker processes and load FractalTools to those worker processes.
 function loadprocs(numprocs=Base.Sys.CPU_THREADS - 1 - nprocs())
     addprocs(numprocs)
+    @everywhere @eval begin 
+        using Pkg 
+        Pkg.activate(dirname(dirname(@__DIR__)))
+    end
     @everywhere @eval using FractalTools
 end
 

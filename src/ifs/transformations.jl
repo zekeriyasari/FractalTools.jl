@@ -13,9 +13,14 @@ Affine transformation
     $(TYPEDFIELDS)
 """
 struct Transformation{T1, T2}
+    "Matrix of the transformation"
     A::T1 
+    "Vector of the transformation"
     b::T2 
-    Transformation(A::AbstractMatrix, b::AbstractVector) = new{typeof(A), typeof(b)}(A, b)
+    function Transformation(A::AbstractMatrix, b::AbstractVector)
+        size(A, 2) == length(b) || throw(DimensionMismatch("Size of `A` is not compatible with `b`"))
+        new{typeof(A), typeof(b)}(A, b)
+    end 
 end 
 
 (w::Transformation)(x) = w.A * x + w.b

@@ -11,6 +11,8 @@ using HCubature
 using LinearAlgebra
 using NearestNeighbors
 
+FRACTALTOOLSPATH = @__DIR__
+
 include("ifs/transformations.jl")
 include("ifs/ifs.jl")
 include("ifs/prototypes.jl")

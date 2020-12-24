@@ -1,6 +1,7 @@
 using FractalTools
 using Test
+using LinearAlgebra 
 
 @testset "FractalTools.jl" begin
-    # Write your own tests here.
+    include("test_ifs.jl")
 end
