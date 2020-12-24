@@ -16,7 +16,8 @@ struct IFS{T1, T2}
     ws::T1 
     probs::T2
     function IFS(ws::AbstractVector{T1}, probs::AbstractVector{T2}) where {T1<:Transformation, T2<:Real} 
-        sum(probs) == 1 || throw(ArgumentError("Sum of probabilities must be 1."))
+        # Note: For the floating point numbers, aproximation(≈), instead of exact equal (==), should be considered
+        sum(probs) ≈ 1 || throw(ArgumentError("Sum of probabilities must be 1."))
         new{typeof(ws), typeof(probs)}(ws, probs) 
     end
 end
