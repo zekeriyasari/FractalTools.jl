@@ -12,17 +12,26 @@ filename = "t3.msh"
 mesh = read_mesh(joinpath(datapath, filename))
 meshes = triangular_partition(mesh)
 regions = gmsh2matplotlibtri.(meshes) 
-# region = regions[3]
+region = regions[3]
 
 
 # Compute z-values on mesh points.
-f(x, y) = x.^2 .+ y.^2
-z = map(region ->  f(region.x,region.y), regions)
-
+# Compute z-values on mesh points.
+func(x, y) = [
+    x^2 + y^2,
+    x^2 - y^2
+]
+number_of_regions = length(regions)
+z = Vector{Vector}(undef, number_of_regions)
+t = Vector{Vector}(undef, number_of_regions)
+for k = 1 : number_of_regions
+    z[k] = getindex.(func.(regions[k].x, regions[k].y), 1)
+    t[k] = getindex.(func.(regions[k].x, regions[k].y), 2)
+end
 
 
 # Calculate integral
-I = map(i ->  integrate(regions[i], z[i], α=0.001), 1 : length(z))
+I = map(i ->  integrate(regions[i], z[i], t[i], α7=0.001, α8=0.001, α11=0.001, α12=0.001), 1 : length(z))
 @show I
 #------------------------ Plots --------------------#
 
