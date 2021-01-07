@@ -7,12 +7,13 @@ using Statistics
 
 close("all")
 
-datapath = joinpath(@__DIR__,  "data/gmsh_data")
+datapath = joinpath(@__DIR__,  "../../data/gmsh_data")
+# datapath = joinpath(pathof(FractalTools), "data/gmsh_data")
 filename = "t3.msh"
 
 # Read mesh file.
 mesh = read_mesh(joinpath(datapath, filename))
-scale_factor = 1 / 10  # Rescale the mesh.
+scale_factor = 1   # Rescale the mesh.
 for node in mesh.nodes
     node.x /= scale_factor
     node.y /= scale_factor
