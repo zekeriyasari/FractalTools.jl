@@ -30,26 +30,22 @@ function integrate(mesh::PyCall.PyObject, z::AbstractVector; α::Real=0.001, reg
     yt1, yt2, yt3 = apex_coords[:, 2]
     @info (xt1, xt2, xt3)
     @info (yt1, yt2, yt3)
-    # domain_vec = [0, 0, 1, 0, 0, 1]
-    # domain_mat = [x1 y1 0 0 1 0;
-    #               0 0 x1 y1 0 1;
-    #               x2 y2 0 0 1 0;
-    #               0 0 x2 y2 0 1;
-    #               x3 y3 0 0 1 0;
-    #               0 0 x3 y3 0 1]
-    # @info domain_mat
-    domain_vec = [xt1, yt1, yt2, xt3, xt2, yt3]
-    domain_mat = [0 0 1 0 0 0;
-                  0 0 0 0 0 1;
-                  0 0 0 1 0 1;
-                  0 1 1 0 0 0;
-                  1 0 1 0 0 0;
-                  0 0 0 0 1 1]
+    domain_vec = [0, 0, 1, 0, 0, 1]
+    domain_mat = [xt1 yt1 0 0 1 0;
+                  0 0 xt1 yt1 0 1;
+                  xt2 yt2 0 0 1 0;
+                  0 0 xt2 yt2 0 1;
+                  xt3 yt3 0 0 1 0;
+                  0 0 xt3 yt3 0 1]
+    @info domain_mat
+
     A = domain_mat \ domain_vec
+    @show A
     ΔU = abs.(det([A[1] A[2];
                    A[3] A[4]]))
-    k11 = A[1] + A[2] + 3*A[5]
-    k12 = A[3] + A[4] + 3*A[6]
+    @show ΔU
+    k11 = (A[1] + A[2] + 3*A[5])
+    k12 = (A[3] + A[4] + 3*A[6])
     K1 = ΔU/6 * sum(ΔL .* (α5 * k11 + α6 * k12 + 3*β3))
     K2 = sum(ΔL * α)
     I = K1 / (1 - K2)  # Integration value
