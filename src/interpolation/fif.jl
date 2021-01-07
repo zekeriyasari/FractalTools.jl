@@ -59,7 +59,11 @@ end
 
 Interpolates the data pairs (xi, yi) for xi ∈ `x` and yi ∈ y. `f0` is the initial function and `niter` is the number of iterations.
 """
-function fif(x::AbstractVector, y::AbstractVector, d::AbstractVector; f0=zero, niter::Int=5)
+function fif(x::AbstractVector, y::AbstractVector; d::Union{<:Real, <:AbstractVector}, f0=zero, niter::Int=5)
+    if d isa Real 
+        d = fill(d, length(x) - 1)
+    end 
+
     # Construct IFS 
     ifs = getifs(x, y, d)
 
