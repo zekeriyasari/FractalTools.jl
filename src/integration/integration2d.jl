@@ -28,8 +28,8 @@ function integrate(mesh::PyCall.PyObject, z::AbstractVector; α::Real=0.001, reg
     # U(x, y) = [a11 a12; a12 a22 ][x; y] + [b1; b2] = A x + b
     xt1, xt2, xt3 = apex_coords[:, 1]
     yt1, yt2, yt3 = apex_coords[:, 2]
-    @info (xt1, xt2, xt3)
-    @info (yt1, yt2, yt3)
+    # @info (xt1, xt2, xt3)
+    # @info (yt1, yt2, yt3)
     domain_vec = [0, 0, 1, 0, 0, 1]
     domain_mat = [xt1 yt1 0 0 1 0;
                   0 0 xt1 yt1 0 1;
@@ -37,13 +37,13 @@ function integrate(mesh::PyCall.PyObject, z::AbstractVector; α::Real=0.001, reg
                   0 0 xt2 yt2 0 1;
                   xt3 yt3 0 0 1 0;
                   0 0 xt3 yt3 0 1]
-    @info domain_mat
+    # @info domain_mat
 
     A = domain_mat \ domain_vec
-    @show A
+    # @show A
     ΔU = abs.(det([A[1] A[2];
                    A[3] A[4]]))
-    @show ΔU
+    # @show ΔU
     k11 = (A[1] + A[2] + 3*A[5])
     k12 = (A[3] + A[4] + 3*A[6])
     K1 = ΔU/6 * sum(ΔL .* (α5 * k11 + α6 * k12 + 3*β3))
@@ -73,8 +73,8 @@ function integrate(mesh::PyCall.PyObject, z::AbstractVector, t::AbstractVector ;
     # U(x, y) = [a11 a12; a12 a22 ][x; y] + [b1; b2] = A x + b
     xt1, xt2, xt3 = apex_coords[:, 1]
     yt1, yt2, yt3 = apex_coords[:, 2]
-    @info (xt1, xt2, xt3)
-    @info (yt1, yt2, yt3)
+    # @info (xt1, xt2, xt3)
+    # @info (yt1, yt2, yt3)
     domain_vec = [0, 0, 1, 0, 0, 1]
     domain_mat = [xt1 yt1 0 0 1 0;
                   0 0 xt1 yt1 0 1;
