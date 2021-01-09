@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.14
+# v0.12.18
 
 using Markdown
 using InteractiveUtils
@@ -63,8 +63,8 @@ begin
 	hv =  h * ones(length(x) - 1)
 	lv =  l * ones(length(x) - 1)
 	mv =  m * ones(length(x) - 1)
-	interp = fif(x, y, dv, niter=niter)
-	hiddeninterp = hiddenfif(x, y, z, dv, hv, lv, mv, niter=niter)
+	interp = fif(x, y, d = dv, niter=niter)
+	hiddeninterp = hiddenfif(x, y, z, d = dv, h = hv, l = lv, m = mv, niter=niter)
 end
 
 # ╔═╡ 34596672-04b5-11eb-1f41-f781db5f981f

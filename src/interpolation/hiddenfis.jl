@@ -30,11 +30,13 @@ function hiddenfis(mesh::PyCall.PyObject, z::AbstractVector{<:Real}, t::Abstract
             # If (xd, yd) cannot be found, find the nearest triangle
             # and project (xd, yd) back onto the triangle
 			if tri_idx == 0
-				nn_idx, nn_dist = knn(tree, [xd; yd], 1)
-                tri_idx = finder(mesh.x[nn_idx], mesh.y[nn_idx])[1] .+ 1
-				nn_tri_idx = mesh.triangles[tri_idx, :] .+ 1
-				triang = collect(transpose([mesh.x[nn_tri_idx] mesh.y[nn_tri_idx]]))
-				xd, yd = proj_onto_triangle([xd; yd], triang)
+				@info xd, yd
+				# nn_idx, nn_dist = knn(tree, [xd; yd], 1)
+                # tri_idx = finder(mesh.x[nn_idx], mesh.y[nn_idx])[1] .+ 1
+				# nn_tri_idx = mesh.triangles[tri_idx, :] .+ 1
+				# triang = collect(transpose([mesh.x[nn_tri_idx] mesh.y[nn_tri_idx]]))
+				# xd, yd = proj_onto_triangle([xd; yd], triang)
+				return [NaN, NaN]
 			end
 			A = coeffs[:, :, tri_idx]
 			α = [α7 α8; α11 α12]; 

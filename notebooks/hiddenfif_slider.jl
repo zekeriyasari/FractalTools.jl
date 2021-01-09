@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.4
+# v0.12.18
 
 using Markdown
 using InteractiveUtils
@@ -26,7 +26,7 @@ begin
 end 
 
 # ╔═╡ 24b8a340-01b5-11eb-0551-318932fe4a10
-@bind d html"<input type=range min=0 max=1 step=1e-1>"
+@bind d html"<input type=range min=0 max=1 step=1e-3>"
 
 # ╔═╡ 2caf47f8-047f-11eb-1f15-db8e661dc9ce
 @bind niter html"<input type=range min=1 max=30 step=1>"
@@ -49,7 +49,7 @@ begin
 	m = d * ones(length(x) - 1)
 	
 	# Interplate
-	interp = hiddenfif(x, y, z, dvar, h, l, m, niter=niter) 
+	interp = hiddenfif(x, y, z, d=dvar, h=h, l=l, m=m, niter=niter) 
 	
 	# Plots 
 	plt = plot()

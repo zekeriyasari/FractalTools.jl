@@ -1,5 +1,11 @@
 # This file includes an example for two dimensional interpolation over triangular interpolation domain.
 
+# TODO: Relative error must decrease with decreasing vertical scaling factor and increasing interpolation point. 
+# TODO: Plot error levels with colors in 2D surfaces.
+# TODO: Increase number of points in the mesh.
+# TODO: Relative error calculation for zero. Look at MSE with scaling factor.
+# TODO: Construct the interpolation domain while constructing the interpolant.
+
 using FractalTools
 using Triangulation
 using PyPlot 
@@ -22,7 +28,7 @@ meshes = triangular_partition(mesh)
 regions = gmsh2matplotlibtri.(meshes)
 
 # Compute z-values on mesh points.
-func(x, y) = x.^2 .+ y.^2
+func(x, y) = x.^2 .+ y.^2 .+ 1.
 # func(x, y) = -20 * exp.(-0.2 * sqrt.(0.5 * (x.^2 .+ y.^2))) - exp.(0.5 * (cos.(2 * pi * x) + cos.(2 * pi * y))) .+ MathConstants.e .+ 20
 # func(x, y) = -(y .+ 47) .* sin.(sqrt.(abs.(x ./ 2 .+ (y .+ 47)))) .- x .* sin.(sqrt.(abs.(x .- (y .+ 47))))
 # func(x, y) = 100 * sqrt.(abs.(y - 0.01 * x.^2)) .+ 0.01 * abs.(x .+ 10)
@@ -33,7 +39,7 @@ for k = 1 : number_of_regions
 end
 
 # Refine region to evaluate interpolated function
-subdiv = 2
+subdiv = 3
 x, y = refine(gmsh2matplotlibtri(mesh), subdiv, true)
 
 # Compute initial and real values.
@@ -49,15 +55,15 @@ interpolant, coeffs = fis(regions, z, α=α, func0=func0, num_iter=10, get_coeff
 real_values = func.(x, y)
 interpolated_values = interpolant.(x, y)
 absolute_error = abs.(interpolated_values - real_values)
-relative_error = absolute_error ./ (abs.(real_values .+ eps())) * 100
+relative_error = absolute_error ./ (abs.(real_values)) * 100
 frerr = mean(absolute_error.^2)
 
 # Filtered relative error 
-threshold = 1.
+threshold = 0.05
 mask = x.^2 .+ y.^2 .< threshold
 idx = findall(mask)
 relative_error_fltr = copy(relative_error)
-relative_error_fltr[idx] .= 0.
+relative_error_fltr[idx] .= 0.# TODO: NAN value
 
 # # Plot the results.
 xd = xcoords(mesh)
@@ -125,7 +131,7 @@ ylabel("y", labelpad=10, fontsize=12)
 zlabel("z", labelpad=10, fontsize=12)
 xticks(range(minx, maxx, length=5))
 yticks(range(miny, maxy, length=5))
-zticks(range(minimum(relative_error), maximum(relative_error), length=5))
+# zticks(range(minimum(relative_error), maximum(relative_error), length=5))
 tight_layout()
 display(PyPlot.gcf())
 
@@ -140,7 +146,7 @@ ylabel("y", labelpad=10, fontsize=12)
 zlabel("z", labelpad=10, fontsize=12)
 xticks(range(minx, maxx, length=5))
 yticks(range(miny, maxy, length=5))
-zticks(range(minimum(relative_error_fltr), maximum(relative_error_fltr), length=5))
+# zticks(range(minimum(relative_error_fltr), maximum(relative_error_fltr), length=5))
 tight_layout()
 display(PyPlot.gcf())
 
