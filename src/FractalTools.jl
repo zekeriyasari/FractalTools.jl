@@ -22,7 +22,7 @@ include("integration/integration1d.jl")
 include("integration/integration2d.jl")
 
 function __init__()
-    global spt = pyimport("scipy.spatial")
+    global spt = pyimport_conda("scipy.spatial", "scipy")
 end
 
 end # module
