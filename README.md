@@ -5,4 +5,4 @@
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/zekeriyasari/FractalTools.jl?svg=true)](https://ci.appveyor.com/project/zekeriyasari/FractalTools-jl)
 [![Codecov](https://codecov.io/gh/zekeriyasari/FractalTools.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/zekeriyasari/FractalTools.jl)
 [![Coveralls](https://coveralls.io/repos/github/zekeriyasari/FractalTools.jl/badge.svg?branch=master)](https://coveralls.io/github/zekeriyasari/FractalTools.jl?branch=master)
-[![Documentation](https://github.com/zekeriyasari/FractalTools.jl/workflows/Documentation/badge.svg?branch=master)](https://github.com/zekeriyasari/FractalTools.jl/actions?query=workflow%3ADocumentation)
+![CI](https://github.com/zekeriyasari/FractalTools.jl/workflows/CI/badge.svg)
