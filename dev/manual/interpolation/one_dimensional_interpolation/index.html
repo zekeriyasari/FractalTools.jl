@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>1D Fractal Interpolation · FractalTools.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">FractalTools.jl</span></div><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">API</a></li><li><span class="tocitem">Notes</span><ul><li><input class="collapse-toggle" id="menuitem-2-1" type="checkbox" checked/><label class="tocitem" for="menuitem-2-1"><span class="docs-label">Interpolation</span><i class="docs-chevron"></i></label><ul class="collapsed"><li class="is-active"><a class="tocitem" href>1D Fractal Interpolation</a><ul class="internal"><li><a class="tocitem" href="#Preliminaries"><span>Preliminaries</span></a></li><li><a class="tocitem" href="#D-Fractal-Interpolation"><span>1D Fractal Interpolation</span></a></li><li><a class="tocitem" href="#D-Hidden-Fractal-Interpolation"><span>1D Hidden Fractal Interpolation</span></a></li></ul></li><li><a class="tocitem" href="../two_dimensional_interpolation/">2D Fractal Interpolation</a></li><li><a class="tocitem" href="../one_dimensional_hidden_interpolation/">1D Hidden Fractal Interpolation</a></li><li><a class="tocitem" href="../two_dimensional_hidden_interpolation/">2D Hidden Fractal Interpolation</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-2" type="checkbox"/><label class="tocitem" for="menuitem-2-2"><span class="docs-label">Integration</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../integration/one_dimensional_integration/">1D Fractal Integration</a></li><li><a class="tocitem" href="../../integration/two_dimensional_integration/">2D Fractal Integration</a></li><li><a class="tocitem" href="../../integration/one_dimensional_hidden_integration/">1D Hidden Fractal Integration</a></li><li><a class="tocitem" href="../../integration/two_dimensional_hidden_integration/">2D Hidden Fractal Integration</a></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Notes</a></li><li><a class="is-disabled">Interpolation</a></li><li class="is-active"><a href>1D Fractal Interpolation</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>1D Fractal Interpolation</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/zekeriyasari/FractalTools.jl/blob/master/docs/src/manual/interpolation/one_dimensional_interpolation.md#L" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><p>This page includes notes about one dimensional fractal interpolation and one dimensional hidden fractal interpolation.</p><h2 id="Preliminaries"><a class="docs-heading-anchor" href="#Preliminaries">Preliminaries</a><a id="Preliminaries-1"></a><a class="docs-heading-anchor-permalink" href="#Preliminaries" title="Permalink"></a></h2><p>Let <span>$N &gt; 2$</span> be natural number. Let <span>$x_0 &lt; x_1 &lt; \ldots &lt; x_N$</span> be real numbers. Let <span>$I = [x_0, x_N]$</span>, and <span>$I_i = [x_i, x_{i + 1}]$</span> for <span>$i = 0, \ldots, N - 1$</span> be the subintervals of <span>$I$</span>. Consider homeomorphisms <span>$L_i(x): I \mapsto I_i$</span> such that</p><p class="math-container">\[\begin{aligned}
+|L_i(x_j) - L_i(x_k)| &amp; \leq s_i |x_j - x_k| \\
+L_i(x_0) = x_i, &amp;\quad L_i(x_N) = x_{i + 1}  
+\end{aligned}\]</p><p>for all <span>$x_j, x_k \in I, \; 0 \leq s_i &lt; 1$</span>. Consider <span>$N$</span> continuous transformations <span>$F_i : I \times \mathbb{R} \mapsto \mathbb{R}$</span> such that </p><p class="math-container">\[\begin{aligned}
+|F_i(x_j, y_j) - F_i(x_j, y_k)| &amp;\leq r_i |y_j - y_k| \\
+F_i(x_0, y_0) = y_i &amp;\quad F_i(x_N, y_N) = y_{i + 1} 
+\end{aligned}\]</p><p>for <span>$x_j \in I, \; y_j, y_k \in \mathbb{R}, \; 0 \leq r_i &lt; 1$</span>. Let <span>$w_i : I \times \mathbb{R} \mapsto I_i \times \mathbb{R}$</span> such that</p><p class="math-container">\[w_i(x, y) = (L_i(x), F_i(x, y)), \; i = 1, \ldots, N\]</p><p>Then following is the main theorem of fractal interpolation functions put forward by Barnsley.</p><p>The followings hold for the IFS <span>$\mathcal{I} = \{ I \times \mathbb{R}; w_i, \; i = 1, \ldots, N \}$</span>:</p><ul><li>It has a unique attractor <span>$G$</span> which is the graph of a continuous function <span>$f:I\mapsto \mathbb{R}$</span> satisfying <span>$f(x_i) = y_i$</span> for <span>$i = 0, \ldots, N$</span>.</li><li>Let <span>$(\mathcal{F}, d)$</span> be a complete metric space such that <span>$\mathcal{F} = \{ \tilde{f} \in \mathcal{C}.[^1] (I): \tilde{f}(x_0) = y_0, \; \tilde{f}(x_N) = y_N \}$</span> with the metric <span>$d(\tilde{f}_1, \tilde{f}_2) = max\{ |\tilde{f}_1(x) - \tilde{f}_2(x)| : x \in I \}$</span>. Let <span>$M: \mathcal{F} \mapsto \mathcal{F}$</span> be a mapping defined by <span>$(M\tilde{f})(x) = F_i(L_i^{-1}(x), \tilde{f}(L_i^{-1}(x)), \; x \in I$</span> for <span>$i = 0, \ldots, N$</span>. Then, <span>$M$</span> has unique fixed point <span>$f$</span> such that <span>$f = \lim_{n \mapsto \infty} M^n(\tilde{f})$</span> for any <span>$\tilde{f} \in \mathcal{F}$</span> and <span>$f$</span> satisfies the condition given above.</li></ul><p>The function <span>$f$</span> whose graph is the attractor of the IFS <span>$\mathcal{I}$</span> and which is the fixed point of the mapping <span>$M$</span> given in Theorem above is called a fractal interpolation function (FIF).</p><h2 id="D-Fractal-Interpolation"><a class="docs-heading-anchor" href="#D-Fractal-Interpolation">1D Fractal Interpolation</a><a id="D-Fractal-Interpolation-1"></a><a class="docs-heading-anchor-permalink" href="#D-Fractal-Interpolation" title="Permalink"></a></h2><p>Consider the affine IFS <span>$\mathcal{I} = \{ I \times \mathbb{R}; w_i, \; i = 1, \ldots, N \}$</span> with,</p><p class="math-container">\[\begin{aligned}
+L_i(x) &amp;= a_i x + e_i \\
+F_i(x, y) &amp;= c_i x + d_i y + f_i
+\end{aligned}
+\quad i = 0, \ldots, N - 1\]</p><p>where <span>$d_i, \; i = 1, \ldots, N$</span> are free parameters, also called as vertical scaling factors, such that <span>$|d_i| &lt; 1$</span>. </p><p>Given the vertical scaling factors <span>$d_i, \; i = 1, \ldots, N$</span>, the coefficients <span>$a_i$</span> and <span>$e_i$</span> of the affine transformation <span>$L_i$</span>, and <span>$c_i$</span> and <span>$f_i$</span> of the affine transformation <span>$F_i$</span> are determined to satisfy the constraints, respectively.</p><p>From the boundary conditions, we have</p><p class="math-container">\[\begin{bmatrix} 
+x_0  &amp; 1 \\ 
+x_N  &amp; 1
+\end{bmatrix}
+
+\begin{bmatrix}
+a_i \\
+e_i
+\end{bmatrix} = 
+
+\begin{bmatrix}
+x_i\\ 
+x_{i + 1}
+\end{bmatrix}
+
+\quad i = 0, \ldots, N - 1\]</p><p>which implies </p><p class="math-container">\[\begin{bmatrix}
+a_i \\
+e_i
+\end{bmatrix} = 
+
+\dfrac{1}{x_0 -  x_N}
+
+\begin{bmatrix} 
+1  &amp; -1 \\ 
+-x_N  &amp; x_0 \\ 
+\end{bmatrix}
+\begin{bmatrix}
+x_i \\ 
+x_{i + 1}
+\end{bmatrix}\]</p><p>Similarly, we have, </p><p class="math-container">\[\begin{bmatrix} 
+x_0  &amp; 1 \\ 
+x_N  &amp; 1 \\ 
+\end{bmatrix}
+
+\begin{bmatrix}
+c_i \\
+f_i
+\end{bmatrix} = 
+
+\begin{bmatrix}
+y_i - d_i y_0 \\ 
+y_{i + 1} - d_i y_N
+\end{bmatrix}
+\quad i = 0, \ldots, N - 1\]</p><p>which implies </p><p class="math-container">\[\begin{bmatrix}
+c_i \\
+f_i
+\end{bmatrix} = 
+
+\dfrac{1}{x_0 -  x_N}
+
+\begin{bmatrix} 
+1  &amp; -1 \\ 
+-x_N  &amp; x_0 \\ 
+\end{bmatrix}
+\begin{bmatrix}
+y_i - d_i y_0 \\ 
+y_{i + 1} - d_i y_N
+\end{bmatrix}\]</p><h2 id="D-Hidden-Fractal-Interpolation"><a class="docs-heading-anchor" href="#D-Hidden-Fractal-Interpolation">1D Hidden Fractal Interpolation</a><a id="D-Hidden-Fractal-Interpolation-1"></a><a class="docs-heading-anchor-permalink" href="#D-Hidden-Fractal-Interpolation" title="Permalink"></a></h2><p>Consider the following IFS, </p><p class="math-container">\[w_i = \left(
+\begin{bmatrix}
+x \\ 
+y \\
+z
+\end{bmatrix}
+\right) = 
+
+\begin{bmatrix}
+a_i &amp; 0 &amp; 0 \\
+c_i &amp; d_i &amp; h_i \\
+k_i &amp; l_i &amp; m_i 
+\end{bmatrix}
+
+\begin{bmatrix}
+x \\ 
+y \\
+z
+\end{bmatrix}
+
++ 
+
+\begin{bmatrix}
+e_i \\ 
+f_i \\
+g_i
+\end{bmatrix}\]</p><p>We assume that the following boundary conditions are satisfied. </p><p class="math-container">\[w_i = \left(
+\begin{bmatrix}
+x_0 \\ 
+y_0 \\
+z_0
+\end{bmatrix}
+\right) = 
+\begin{bmatrix}
+x_{i} \\ 
+y_i \\
+z_i
+\end{bmatrix}\]</p><p>and </p><p class="math-container">\[w_i = \left(
+\begin{bmatrix}
+x_N \\ 
+y_N \\
+z_N
+\end{bmatrix}
+\right) = 
+
+\begin{bmatrix}
+x_{i + 1} \\ 
+y_{i + 1} \\
+z_{i + 1}
+\end{bmatrix}\]</p><p>Given the free parameters  <span>$z_i, d_i, h_i, l_i, m_i$</span>, which are called as hidden variables, the remaining parameter <span>$a_i, c_i, k_i, e_i, f_i, g_i$</span> can be calculated. </p><p>Using the boundary conditions, we can write </p><p class="math-container">\[\begin{bmatrix} 
+x_0  &amp; 1 \\ 
+x_N  &amp; 1
+\end{bmatrix}
+
+\begin{bmatrix}
+a_i \\
+e_i
+\end{bmatrix} = 
+
+\begin{bmatrix}
+x_i\\ 
+x_{i + 1}
+\end{bmatrix}
+
+\quad i = 0, \ldots, N - 1\]</p><p>which implies </p><p class="math-container">\[\begin{bmatrix}
+a_i \\
+e_i
+\end{bmatrix} = 
+
+\dfrac{1}{x_0 -  x_N}
+
+\begin{bmatrix} 
+1  &amp; -1 \\ 
+-x_N  &amp; x_0 \\ 
+\end{bmatrix}
+\begin{bmatrix}
+x_i \\ 
+x_{i + 1}
+\end{bmatrix}\]</p><p>Similarly, we have </p><p class="math-container">\[\begin{bmatrix} 
+x_0  &amp; 1 \\ 
+x_N  &amp; 1
+\end{bmatrix}
+
+\begin{bmatrix}
+c_i \\
+f_i
+\end{bmatrix} = 
+
+\begin{bmatrix}
+y_i - d_i y_0 - h_i z_0 \\ 
+y_{i + 1} - d_i y_N - h_i z_N
+\end{bmatrix}
+
+\quad i = 0, \ldots, N - 1\]</p><p>which implies </p><p class="math-container">\[\begin{bmatrix}
+c_i \\
+f_i
+\end{bmatrix} = 
+
+\dfrac{1}{x_0 -  x_N}
+
+\begin{bmatrix} 
+1  &amp; -1 \\ 
+-x_N  &amp; x_0 \\ 
+\end{bmatrix}
+\begin{bmatrix}
+y_i - d_i y_0 - h_i z_0\\ 
+y_{i + 1} - d_i y_N - h_i z_N
+\end{bmatrix}\]</p><p>Again, </p><p class="math-container">\[\begin{bmatrix} 
+x_0  &amp; 1 \\ 
+x_N  &amp; 1
+\end{bmatrix}
+
+\begin{bmatrix}
+k_i \\
+g_i
+\end{bmatrix} = 
+
+\begin{bmatrix}
+z_i - d_i y_0 - h_i z_0 \\ 
+z_{i + 1} - d_i y_N - h_i z_N
+\end{bmatrix}
+
+\quad i = 0, \ldots, N - 1\]</p><p>which implies </p><p class="math-container">\[\begin{bmatrix}
+k_i \\
+g_i
+\end{bmatrix} = 
+
+\dfrac{1}{x_0 -  x_N}
+
+\begin{bmatrix} 
+1  &amp; -1 \\ 
+-x_N  &amp; x_0 \\ 
+\end{bmatrix}
+\begin{bmatrix}
+z_i - d_i y_0 - h_i z_0\\ 
+z_{i + 1} - d_i y_N - h_i z_N
+\end{bmatrix}\]</p><section class="footnotes is-size-7"><ul><li class="footnote" id="footnote-1"><a class="tag is-link" href="#citeref-1">1</a><span>$\mathcal{C}(\bm{X})$</span> denotes the set of continuous functions defined over the set <span>$\bm{X}$</span>.</li></ul></section></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../../">« API</a><a class="docs-footer-nextpage" href="../two_dimensional_interpolation/">2D Fractal Interpolation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 1 February 2021 17:09">Monday 1 February 2021</span>. Using Julia version 1.5.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
