@@ -30,7 +30,7 @@ Returns true if `x` is in `I`.
 julia> I = Interval(1, 2)
 Interval{Int64}(1, 2)
 
-julia> 1.5 ∈ I 
+julia> 1.5 ∈ Interval(1, 2)
 true
 ```
 """
