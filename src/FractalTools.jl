@@ -10,6 +10,10 @@ using PyCall
 using HCubature
 using LinearAlgebra
 using NearestNeighbors
+using GeometryBasics
+using Clustering
+
+include("mesh.jl")
 
 include("ifs/transformations.jl")
 include("ifs/ifs.jl")
