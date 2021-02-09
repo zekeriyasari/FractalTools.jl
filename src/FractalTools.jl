@@ -10,8 +10,11 @@ using PyCall
 using HCubature
 using LinearAlgebra
 using NearestNeighbors
+
 using GeometryBasics
 using Clustering
+import AbstractPlotting
+import AbstractPlotting: @recipe
 
 include("mesh.jl")
 
