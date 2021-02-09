@@ -1,6 +1,6 @@
 # This file 
 
-export DelaunayTessellation, addpoint!, tomesh, npoints, locate, finegrain!, points, simplices, tessplot, getpoint
+export DelaunayTessellation, addpoint!, tomesh, npoints, locate, finegrain!, points, simplices, getpoint, tessplot, tessplotf
 
 """
     $TYPEDEF
@@ -76,7 +76,7 @@ Constructs a GeometryBasic.Mesh from `dlntess` ready for plotting.
 function tomesh(tri)
     vs = [Point(val[1], val[2]) for val in eachrow(tri.points)]
     fs = [TriangleFace(val[1], val[2], val[3]) for val in eachrow(tri.simplices .+ 1)]
-    Mesh(vs, fs)
+    GeometryBasics.Mesh(vs, fs)
 end 
 
 # Returns the bouding box to the tessellation 
@@ -156,12 +156,41 @@ end
     tessplot(dlntess::DelaunayTessellation)
 
 Plots the DelaunayTessellation `dlntess`
-
-    tessplot(ax::Axis, dlntess::DelaunayTessellation) 
-
-Plots `dlntess` on `ax`.
 """
 function tessplot end 
+
+
+@recipe(TessPlotF, dlntess, f) do scene 
+    AbstractPlotting.Attributes(
+        vcolor = :red,
+        vmarkersize = 10,
+        lwidth = 3
+    )
+end 
+
+function AbstractPlotting.plot!(tessplotf::TessPlotF)
+    _dlntess = tessplotf[:dlntess][] 
+    _f = tessplotf[:f][]
+    pnts = points(_dlntess)
+    trigs = simplices(_dlntess)
+    pnts3d = [Point3f0(pnt..., _f(pnt...)) for pnt in eachrow(pnts)]
+    trigs3d = [TriangleFace(trig...) for trig in eachrow(trigs)]
+    msh = GeometryBasics.Mesh(pnts3d, trigs3d)
+    AbstractPlotting.mesh!(tessplotf, msh, color=first.(msh.position))
+    AbstractPlotting.wireframe!(tessplotf, msh, linewidth=tessplotf.lwidth) 
+    AbstractPlotting.scatter!(tessplotf, 
+        getindex.(msh.position, 1), getindex.(msh.position, 2), getindex.(msh.position, 3),
+        color=tessplotf.vcolor, markersize=tessplotf.vmarkersize)
+    tessplotf
+end 
+
+"""
+    tessplotf(dlntess::DelaunayTessellation, f)
+
+Plots the DelaunayTessellation `dlntess`
+"""
+function tessplotf end 
+
 
 # """
 #     tessplot(dlntess::DelaunayTessellation)
