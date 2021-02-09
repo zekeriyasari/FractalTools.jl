@@ -74,8 +74,19 @@ end
 Constructs a GeometryBasic.Mesh from `dlntess` ready for plotting.
 """
 function tomesh(tri)
-    vs = [Point(val[1], val[2]) for val in eachrow(tri.points)]
-    fs = [TriangleFace(val[1], val[2], val[3]) for val in eachrow(tri.simplices .+ 1)]
+    vs = [Point(val...) for val in eachrow(tri.points)]
+    fs = [TriangleFace(val...) for val in eachrow(tri.simplices .+ 1)]
+    GeometryBasics.Mesh(vs, fs)
+end 
+
+"""
+    $SIGNATURES 
+
+Constructs a three dimensional GeometryBasics.Mesh from `tri` ready for ploting.
+"""
+function tomesh(tri, f)
+    vs = [Point3f0(pnt..., f(pnt...)) for pnt in eachrow(tri.points )]
+    fs = [TriangleFace(trig...) for trig in eachrow(tri.simplices .+ 1)]
     GeometryBasics.Mesh(vs, fs)
 end 
 
@@ -169,13 +180,7 @@ function tessplot end
 end 
 
 function AbstractPlotting.plot!(tessplotf::TessPlotF)
-    _dlntess = tessplotf[:dlntess][] 
-    _f = tessplotf[:f][]
-    pnts = points(_dlntess)
-    trigs = simplices(_dlntess)
-    pnts3d = [Point3f0(pnt..., _f(pnt...)) for pnt in eachrow(pnts)]
-    trigs3d = [TriangleFace(trig...) for trig in eachrow(trigs)]
-    msh = GeometryBasics.Mesh(pnts3d, trigs3d)
+    msh = tomesh(tessplotf[:dlntess][].tessellation , tessplotf[:f][])
     AbstractPlotting.mesh!(tessplotf, msh, color=first.(msh.position))
     AbstractPlotting.wireframe!(tessplotf, msh, linewidth=tessplotf.lwidth) 
     AbstractPlotting.scatter!(tessplotf, 
