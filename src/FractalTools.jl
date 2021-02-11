@@ -13,8 +13,7 @@ using NearestNeighbors
 
 using GeometryBasics
 using Clustering
-import AbstractPlotting
-import AbstractPlotting: @recipe
+using AbstractPlotting
 
 include("mesh.jl")
 

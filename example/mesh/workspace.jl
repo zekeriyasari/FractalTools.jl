@@ -1,23 +1,28 @@
 
 using FractalTools 
+using GeometryBasics
 using Makie 
-using AbstractPlotting
-import AbstractPlotting.GeometryBasics: TriangleFace 
 
-# Construct tessellation 
-p1, p2, p3 = [-1., √3.], [-1., -√3], [2., 0.]
-dlntess = DelaunayTessellation(p1, p2, p3)
+# Construct delaunay 
+p1, p2, p3 = [-1., -1], [1., -1], [0., 1.]
+tridln = TriDelaunay(p1, p2, p3)
 
-while npoints(dlntess) ≤ 1000 
-    addpoint!(dlntess) 
+while npoints(tridln) ≤ 1000 
+    addpoint!(tridln) 
 end 
 
-finegrain!(dlntess, 100)
+finegrain!(tridln, 100)
 
 # Define function 
 f(x, y) = x^2 + y^2
 
 # Plot the result 
-fig, ax, plt = tessplotf(dlntess, f, vmarkersize=10)
-wireframe!(tomesh(dlntess.tessellation), linewidth=3)
+fig, ax, plt = tridelaunayplotf(tridln, f, vmarkersize=10)
+wireframe!(tomesh(tridln.delaunay), linewidth=3)
 display(fig)
+
+msh = tomesh(tridln.delaunay, f) 
+pts = [Point2(val[1], val[2]) for val in msh.position]
+msh2 = GeometryBasics.Mesh(pts, faces(msh))
+mesh(msh) 
+mesh!(msh2)

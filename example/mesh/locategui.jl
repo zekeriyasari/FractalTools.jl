@@ -2,21 +2,21 @@ using FractalTools
 using Makie 
 
 # Contruct a tesslation 
-dlntess = Node(DelaunayTessellation([0., 0.], [1., 0], [0.5, 1.], addboundarypoints=true))
+tridln = Node(TriDelaunay([0., 0.], [1., 0], [0.5, 1.], addboundarypoints=true))
 
 # Definea an observables
-msh = lift(dlntess) do val 
-    tomesh(val.tessellation)
+msh = lift(tridln) do val 
+    tomesh(val.delaunay)
 end 
 vtx = lift(msh) do val 
     val.position 
 end 
 
 # Test point 
-tpnt = Node(getpoint(dlntess[]))
+tpnt = Node(getpoint(tridln[]))
 tripts = lift(tpnt) do val 
-    tidx = simplices(dlntess[])[locate(dlntess[], val), :]
-    map(val -> Point(val...), eachrow(points(dlntess[])[tidx, :]))
+    tidx = simplices(tridln[])[locate(tridln[], val), :]
+    map(val -> Point(val...), eachrow(points(tridln[])[tidx, :]))
 end 
 
 # Plot tesselation 
@@ -43,14 +43,14 @@ end
 # Add button interaction.
 on(ax.scene.events.keyboardbuttons) do button 
     if ispressed(button, Keyboard.a)
-        pnt = addpoint!(dlntess[])
+        pnt = addpoint!(tridln[])
         @info "$pnt is added"
     end 
     if ispressed(button, Keyboard.f)
-        finegrain!(dlntess[], 10)
-        @info "Tessellation is fine grained"
+        finegrain!(tridln[], 10)
+        @info "delaunay is fine grained"
     end 
-    dlntess[] = dlntess[]   # Trigger change
+    tridln[] = tridln[]   # Trigger change
 end 
 
 # Display scene 

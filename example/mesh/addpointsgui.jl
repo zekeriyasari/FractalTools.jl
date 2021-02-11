@@ -2,12 +2,12 @@ using FractalTools
 using Makie 
 
 # Contruct a tesslation 
-dlntess = Node(DelaunayTessellation([0., 0.], [1., 0], [0.5, 1.], addboundarypoints=false))
+tridln = Node(TriDelaunay([0., 0.], [1., 0], [0.5, 1.], addboundarypoints=false))
 
 # Definea an observables
-msh = lift(dlntess) do val 
-    @info "change in dlntess"
-    tomesh(val.tessellation)
+msh = lift(tridln) do val 
+    @info "change in tridln"
+    tomesh(val.delaunay)
 end 
 vtx = lift(msh) do val 
     @info "change in msh"
@@ -31,8 +31,8 @@ on(scene.events.mousebuttons) do buttons
    if ispressed(scene, Mouse.left)
         pos = to_world(scene, Point(scene.events.mouseposition[]))
         @info "$pos added"
-        addpoint!(dlntess[], pos)
-        dlntess[] = dlntess[]   # Trigger change
+        addpoint!(tridln[], pos)
+        tridln[] = tridln[]   # Trigger change
         push!(vtx[], pos)
    end
 end

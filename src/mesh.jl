@@ -1,97 +1,39 @@
-# This file 
+#  This file includes mesh related methods. 
 
-export DelaunayTessellation, addpoint!, tomesh, npoints, locate, finegrain!, points, simplices, getpoint, tessplot, tessplotf
+export boundarypoints, isvalidpoint, getpoint, box, project, triangulate, findouttriangle, interpolate, gettransform, disperse
 
-"""
-    $TYPEDEF
 
-Delaunay tessellation 
-"""
-mutable struct DelaunayTessellation{TS,TR}
-    "Tessellation"
-    tessellation::TS
-    "Boundary triangle"
-    triangle::TR
+function boundarypoints(p1::Point, p2::Point, p3::Point; numpoints::Int=10)
+    vcat(
+        linepoint(p1, p2, numpoints=numpoints), 
+        linepoint(p1, p3, numpoints=numpoints), 
+        linepoint(p2, p3, numpoints=numpoints)
+        )
 end 
 
-"""
-    $SIGNATURES 
-
-Construct a Delaunay triangulation from the points `p1, p2, p3`
-"""
-function DelaunayTessellation(p1::AbstractVector, p2::AbstractVector, p3::AbstractVector; addboundarypoints::Bool=true) 
-    p1, p2, p3, p4 = Point(p1...), Point(p2...), Point(p3...), Point(((p1 + p2 + p3) / 3)...)
-    triangle = Triangle(p1, p2, p3)
-    pnts = [p1, p2, p3, p4]
-    addboundarypoints && append!(pnts,  boundarypoints(p1, p2, p3))
-    tessellation = spt.Delaunay(pnts, incremental=true)
-    DelaunayTessellation(tessellation, triangle)
-end
-
-"""
-    $SIGNATURES
-
-Adds a point inside the tessellation by preserving delauneyhood.
-"""
-function addpoint!(dlntess::DelaunayTessellation, pnt::Point2=getpoint(dlntess))
-    isvalidpoint(pnt, dlntess) && dlntess.tessellation.add_points([pnt])
-    pnt 
-end 
-
-isvalidpoint(pnt::AbstractVector, dlntess::DelaunayTessellation) = pnt ∈ dlntess.triangle && pnt !== Point(NaN, NaN)
-
-# Returns a valid point inside the triangle of the dlntess
-function getpoint(dlntess::DelaunayTessellation; maxiter::Int=100_000) 
-    tri = dlntess.triangle 
-    A, b = box(tri.points...) 
-    iter = 1 
-    while iter ≤ maxiter 
-        val = A * rand(2) + b 
-        pnt = Point(val[1], val[2]) 
-        isvalidpoint(pnt, dlntess) && return pnt
-        iter += 1
-    end 
-    return Point(NaN, NaN)  # For type-stability 
-end 
-
-function boundarypoints(p1, p2, p3; numpoints::Int=10)
-    vcat([p1, p2, p3], 
-    linepoint(p1, p2, numpoints=numpoints), 
-    linepoint(p1, p3, numpoints=numpoints), 
-    linepoint(p2, p3, numpoints=numpoints))
-end 
-
-function linepoint(p1, p2; numpoints::Int=10) 
+function linepoint(p1::Point, p2::Point; numpoints::Int=10) 
     x = collect(range(p1[1], p2[1], length=numpoints))
     y = collect(range(p1[2], p2[2], length=numpoints))
     [Point(xi, yi) for (xi, yi) in zip(x, y)]
 end
 
+isvalidpoint(pnt::Point, trig::Triangle) = pnt ∈ trig && pnt !== Point(NaN, NaN)
 
-"""
-    $SIGNATURES 
-
-Constructs a GeometryBasic.Mesh from `dlntess` ready for plotting.
-"""
-function tomesh(tri)
-    vs = [Point(val...) for val in eachrow(tri.points)]
-    fs = [TriangleFace(val...) for val in eachrow(tri.simplices .+ 1)]
-    GeometryBasics.Mesh(vs, fs)
+# Returns a valid point inside the triangle of the tridln
+function getpoint(tri::Triangle; maxiter::Int=100_000) 
+    A, b = box(tri.points...) 
+    iter = 1 
+    while iter ≤ maxiter 
+        val = A * rand(2) + b 
+        pnt = Point(val[1], val[2]) 
+        isvalidpoint(pnt, tri) && return pnt
+        iter += 1
+    end 
+    return Point(NaN, NaN)  # For type-stability 
 end 
 
-"""
-    $SIGNATURES 
-
-Constructs a three dimensional GeometryBasics.Mesh from `tri` ready for ploting.
-"""
-function tomesh(tri, f)
-    vs = [Point3f0(pnt..., f(pnt...)) for pnt in eachrow(tri.points )]
-    fs = [TriangleFace(trig...) for trig in eachrow(tri.simplices .+ 1)]
-    GeometryBasics.Mesh(vs, fs)
-end 
-
-# Returns the bouding box to the tessellation 
-function box(p1::AbstractVector, p2::AbstractVector, p3::AbstractVector)
+# Returns the bouding box to the delaunay 
+function box(p1::Point, p2::Point, p3::Point)
     x, y = first.([p1, p2, p3]), last.([p1, p2, p3]) 
     xmin, xmax, ymin, ymax = minimum(x), maximum(x), minimum(y), maximum(y)
     xwidth, ywidth = xmax - xmin, ymax - ymin 
@@ -100,115 +42,230 @@ function box(p1::AbstractVector, p2::AbstractVector, p3::AbstractVector)
     A, b
 end
 
+project(pnts3d) = [Point(pnt[1], pnt[2]) for pnt in pnts3d]
 
-"""
-    $SIGNATURES 
-
-Returns the number of points in `dlntess`.
-"""
-npoints(dlntess::DelaunayTessellation) = dlntess.tessellation.npoints
-
-"""
-    $SIGNATURES 
-
-Returns the coordinates of the points of `dlntess`. 
-"""
-points(dlntess::DelaunayTessellation) = dlntess.tessellation.points
-
-"""
-    $SIGNATURES 
-
-Returns the simplices of `dlntess` 
-"""
-simplices(dlntess::DelaunayTessellation) = dlntess.tessellation.simplices .+ 1
-
-"""
-    $SIGNATURES 
-
-Returns the triangle index of `dlntess` in which the `point` is.
-"""
-function locate(dlntess::DelaunayTessellation, point::AbstractVector)
-    idx = dlntess.tessellation.find_simplex(point)[1] + 1
-    idx == 0 ? error("The point $point cannot be located") : idx
+function triangulate(pnts3d) 
+    pnts2d = project(pnts3d)
+    tess = spt.Delaunay(pnts2d)
+    trifaces = [TriangleFace(val...) for val in eachrow(tess.simplices .+ 1)]
+    tess, GeometryBasics.Mesh(pnts3d, trifaces)
 end 
 
-function finegrain!(dlntess::DelaunayTessellation, npnts::Int)   
-    pnts = [Point(val[1], val[2]) for val in eachrow(dlntess.tessellation.points)]
-    centers = clustercenters(pnts, npnts) 
-    dlntess.tessellation = spt.Delaunay(append!(centers, boundarypoints(dlntess.triangle.points...)), incremental=true)
-    dlntess
+function findouttriangle(pnts3d)
+    pnts2d = project(pnts3d)
+    hull = spt.ConvexHull(collect(hcat(collect.(pnts2d)...)') )
+    Triangle(Point.(pnts3d[hull.vertices .+ 1])...)
+end
+
+function interpolate(pnts3d; α=0.01, f0 = (x, y) -> 0., maxiters=15, gettransforms::Bool=false)
+    # Fint convex hull, i.e, the boundary triangle 
+    outtrig = findouttriangle(pnts3d)
+
+    # Consruct a 3d mesh 
+    tess, msh3 = triangulate(pnts3d)
+
+    # Compute transforms 
+    transforms = map(intrig -> gettransform(outtrig, intrig, α), msh3)
+
+    # Define mapping 
+    function mapping(f)
+		function fnext(xd, yd)
+            pnt = [xd, yd]
+			idx = tess.find_simplex(pnt)[1] + 1  
+            idx == 0 && return NaN
+            transform = transforms[idx]
+            A, b = transform.A, transform.b
+			linv = A[1:2, 1:2] \ (pnt - b[1:2])
+			A[3, 1 : 2] ⋅ linv + α * f(linv[1], linv[2]) + b[3]
+		end
+	end 
+
+    # Main iteration of the fractal interpolation.
+    interpolant = ∘((mapping for i in 1 : maxiters)...)(f0)
+	gettransforms ? (interpolant, transforms) : interpolant
 end 
 
-function clustercenters(pnts, numpoints) 
-    mat = [getindex.(pnts, 1) getindex.(pnts, 2)]
-    [Point(val[1], val[2]) for val in eachcol(kmeans(mat', numpoints).centers)]
+function gettransform(outtrig, intrig, α::Real=1.) 
+    outmat = collect(hcat(coordinates(outtrig)...)')
+    inmat = collect(hcat(coordinates(intrig)...)')
+    inmat[:, end] -= α * outmat[:, end]
+    outmat[:, end] = ones(3)
+    sol = outmat \ inmat
+    (A = [  sol[1, 1]   sol[2, 1]   0;
+            sol[1, 2]   sol[2, 2]   0; 
+            sol[1, 3]   sol[2, 3]   α           ],
+    b = [   sol[3, 1],  sol[3, 2],  sol[3, 3]   ])
 end 
 
-####  Define a plotting recipe 
-
-@recipe(TessPlot, dlntess) do scene 
-    AbstractPlotting.Attributes(
-        vcolor = :red,
-        vmarkersize = 10,
-        lwidth = 3
-    )
-end 
-
-function AbstractPlotting.plot!(tessplot::TessPlot)
-    msh = tomesh(tessplot[:dlntess][].tessellation)
-    AbstractPlotting.mesh!(tessplot, msh, color=first.(msh.position))
-    AbstractPlotting.wireframe!(tessplot, msh, linewidth=tessplot.lwidth) 
-    AbstractPlotting.scatter!(tessplot, getindex.(msh.position, 1), getindex.(msh.position, 2), 
-        color=tessplot.vcolor, markersize=tessplot.vmarkersize)
-    tessplot
-end 
-
-"""
-    tessplot(dlntess::DelaunayTessellation)
-
-Plots the DelaunayTessellation `dlntess`
-"""
-function tessplot end 
+function disperse(trig, npoints) 
+    allpnts = [getpoint(trig) for i in 1 : 10 * npoints]
+    ctrpnts = [Point(val[1], val[2]) for val in eachcol(kmeans(hcat(collect.(allpnts)...), npoints).centers)]
+    vcat(trig.points, boundarypoints(trig.points...), ctrpnts)
+end
 
 
-@recipe(TessPlotF, dlntess, f) do scene 
-    AbstractPlotting.Attributes(
-        vcolor = :red,
-        vmarkersize = 10,
-        lwidth = 3
-    )
-end 
+# export TriDelaunay, addpoint!, tomesh, npoints, locate, finegrain!, points, simplices, getpoint, tridelaunayplot, tridelaunayplotf
 
-function AbstractPlotting.plot!(tessplotf::TessPlotF)
-    msh = tomesh(tessplotf[:dlntess][].tessellation , tessplotf[:f][])
-    AbstractPlotting.mesh!(tessplotf, msh, color=first.(msh.position))
-    AbstractPlotting.wireframe!(tessplotf, msh, linewidth=tessplotf.lwidth) 
-    AbstractPlotting.scatter!(tessplotf, 
-        getindex.(msh.position, 1), getindex.(msh.position, 2), getindex.(msh.position, 3),
-        color=tessplotf.vcolor, markersize=tessplotf.vmarkersize)
-    tessplotf
-end 
+# """
+#     $TYPEDEF
 
-"""
-    tessplotf(dlntess::DelaunayTessellation, f)
+# Delaunay tessellation in a triangle 
+# """
+# mutable struct TriDelaunay{TS,TR}
+#     "Delaunay tesselation"
+#     delaunay::TS
+#     "Boundary triangle"
+#     triangle::TR
+# end 
 
-Plots the DelaunayTessellation `dlntess`
-"""
-function tessplotf end 
+# """
+#     $SIGNATURES 
+
+# Construct a Delaunay triangulation from the points `p1, p2, p3`
+# """
+# function TriDelaunay(p1::AbstractVector, p2::AbstractVector, p3::AbstractVector; addboundarypoints::Bool=true) 
+#     p1, p2, p3, p4 = Point(p1...), Point(p2...), Point(p3...), Point(((p1 + p2 + p3) / 3)...)
+#     triangle = Triangle(p1, p2, p3)
+#     pnts = [p1, p2, p3, p4]
+#     addboundarypoints && append!(pnts,  boundarypoints(p1, p2, p3))
+#     delaunay = spt.Delaunay(pnts, incremental=true)
+#     TriDelaunay(delaunay, triangle)
+# end
+
+# function boundarypoints(p1, p2, p3; numpoints::Int=10)
+#     vcat([p1, p2, p3], 
+#     linepoint(p1, p2, numpoints=numpoints), 
+#     linepoint(p1, p3, numpoints=numpoints), 
+#     linepoint(p2, p3, numpoints=numpoints))
+# end 
+
+# function linepoint(p1, p2; numpoints::Int=10) 
+#     x = collect(range(p1[1], p2[1], length=numpoints))
+#     y = collect(range(p1[2], p2[2], length=numpoints))
+#     [Point(xi, yi) for (xi, yi) in zip(x, y)]
+# end
+
+
+# # --------------------------------------- Adding a new point to Tessellation ----------------------------- # 
 
 
 # """
-#     tessplot(dlntess::DelaunayTessellation)
+#     $SIGNATURES
 
-# Plots the DelaunayTessellation `dlntess`
-
-#     tessplot(ax::Axis, dlntess::DelaunayTessellation) 
-
-# Plots `dlntess` on `ax`.
+# Adds a point inside the delaunay by preserving delauneyhood.
 # """
-# function tessplot end 
+# function addpoint!(tridln::TriDelaunay, pnt::Point2=getpoint(tridln))
+#     isvalidpoint(pnt, tridln) && tridln.delaunay.add_points([pnt])
+#     pnt 
+# end 
 
-# @recipe(TessPlot, msh) do scene 
+# isvalidpoint(pnt::AbstractVector, trig::Triangle) = pnt ∈ trig && pnt !== Point(NaN, NaN)
+
+# # Returns a valid point inside the triangle of the tridln
+# function getpoint(tri::Triangle; maxiter::Int=100_000) 
+#     A, b = box(tri.points...) 
+#     iter = 1 
+#     while iter ≤ maxiter 
+#         val = A * rand(2) + b 
+#         pnt = Point(val[1], val[2]) 
+#         isvalidpoint(pnt, tri) && return pnt
+#         iter += 1
+#     end 
+#     return Point(NaN, NaN)  # For type-stability 
+# end 
+# getpoint(tridln::TriDelaunay; maxiters::Int=100_000) = getpoint(tridln.triangle, maxiters=maxiters)
+
+# # --------------------------------------- Delaunay Tessellation to Mesh Coversition ------------------------ # 
+
+
+# """
+#     $SIGNATURES 
+
+# Constructs a GeometryBasic.Mesh from `tridln` ready for plotting.
+# """
+# function tomesh(tri)
+#     vs = [Point(val...) for val in eachrow(tri.points)]
+#     fs = [TriangleFace(val...) for val in eachrow(tri.simplices .+ 1)]
+#     GeometryBasics.Mesh(vs, fs)
+# end 
+
+# """
+#     $SIGNATURES 
+
+# Constructs a three dimensional GeometryBasics.Mesh from `tri` ready for ploting.
+# """
+# function tomesh(tri, f)
+#     vs = [Point3f0(pnt..., f(pnt...)) for pnt in eachrow(tri.points )]
+#     fs = [TriangleFace(trig...) for trig in eachrow(tri.simplices .+ 1)]
+#     GeometryBasics.Mesh(vs, fs)
+# end 
+
+# # Returns the bouding box to the delaunay 
+# function box(p1::AbstractVector, p2::AbstractVector, p3::AbstractVector)
+#     x, y = first.([p1, p2, p3]), last.([p1, p2, p3]) 
+#     xmin, xmax, ymin, ymax = minimum(x), maximum(x), minimum(y), maximum(y)
+#     xwidth, ywidth = xmax - xmin, ymax - ymin 
+#     A = [xwidth 0; 0 ywidth]
+#     b = [xmin, ymin] 
+#     A, b
+# end
+
+
+# # --------------------------------------- Accesing the internals ----------------------------------- # 
+
+
+# """
+#     $SIGNATURES 
+
+# Returns the number of points in `tridln`.
+# """
+# npoints(tridln::TriDelaunay) = tridln.delaunay.npoints
+
+# """
+#     $SIGNATURES 
+
+# Returns the coordinates of the points of `tridln`. 
+# """
+# points(tridln::TriDelaunay) = tridln.delaunay.points
+
+# """
+#     $SIGNATURES 
+
+# Returns the simplices of `tridln` 
+# """
+# simplices(tridln::TriDelaunay) = tridln.delaunay.simplices .+ 1
+
+
+# # --------------------------------------------- Point Locating --------------------------------------------- # 
+
+
+# """
+#     $SIGNATURES 
+
+# Returns the triangle index of `tridln` in which the `point` is.
+# """
+# function locate(tridln::TriDelaunay, point::AbstractVector)
+#     idx = tridln.delaunay.find_simplex(point)[1] + 1
+#     idx == 0 ? error("The point $point cannot be located") : idx
+# end 
+
+# function finegrain!(tridln::TriDelaunay, npnts::Int)   
+#     pnts = [Point(val[1], val[2]) for val in eachrow(tridln.delaunay.points)]
+#     centers = clustercenters(pnts, npnts) 
+#     tridln.delaunay = spt.Delaunay(append!(centers, boundarypoints(tridln.triangle.points...)), incremental=true)
+#     tridln
+# end 
+
+# function clustercenters(pnts, numpoints) 
+#     mat = [getindex.(pnts, 1) getindex.(pnts, 2)]
+#     [Point(val[1], val[2]) for val in eachcol(kmeans(mat', numpoints).centers)]
+# end 
+
+
+# # --------------------------------------- Plots recipe for Makie ---------------------------------- # 
+
+
+# @recipe(TriDelaunayPlot, tridln) do scene 
 #     AbstractPlotting.Attributes(
 #         vcolor = :red,
 #         vmarkersize = 10,
@@ -216,12 +273,44 @@ function tessplotf end
 #     )
 # end 
 
-# function AbstractPlotting.plot!(tessplot::TessPlot)
-#     _msh = tessplot[:msh]
-#     coords = _msh[].position
-#     AbstractPlotting.mesh!(tessplot, _msh, color=first.(coords))
-#     AbstractPlotting.wireframe!(tessplot, _msh, linewidth=tessplot.lwidth) 
-#     AbstractPlotting.scatter!(tessplot, getindex.(coords, 1), getindex.(coords, 2), 
-#         color=tessplot.vcolor, markersize=tessplot.vmarkersize)
-#     tessplot
+# function AbstractPlotting.plot!(tridelaunayplot::TriDelaunayPlot)
+#     msh = tomesh(tridelaunayplot[:tridln][].delaunay)
+#     AbstractPlotting.mesh!(tridelaunayplot, msh, color=first.(msh.position))
+#     AbstractPlotting.wireframe!(tridelaunayplot, msh, linewidth=tridelaunayplot.lwidth) 
+#     AbstractPlotting.scatter!(tridelaunayplot, getindex.(msh.position, 1), getindex.(msh.position, 2), 
+#         color=tridelaunayplot.vcolor, markersize=tridelaunayplot.vmarkersize)
+#     tridelaunayplot
 # end 
+
+# """
+#     tridelaunayplot(tridln::TriDelaunay)
+
+# Plots the TriDelaunay `tridln`
+# """
+# function tridelaunayplot end 
+
+
+# @recipe(tridelaunayplotF, tridln, f) do scene 
+#     AbstractPlotting.Attributes(
+#         vcolor = :red,
+#         vmarkersize = 10,
+#         lwidth = 3
+#     )
+# end 
+
+# function AbstractPlotting.plot!(tridelaunayplotf::tridelaunayplotF)
+#     msh = tomesh(tridelaunayplotf[:tridln][].delaunay , tridelaunayplotf[:f][])
+#     AbstractPlotting.mesh!(tridelaunayplotf, msh, color=first.(msh.position))
+#     AbstractPlotting.wireframe!(tridelaunayplotf, msh, linewidth=tridelaunayplotf.lwidth) 
+#     AbstractPlotting.scatter!(tridelaunayplotf, 
+#         getindex.(msh.position, 1), getindex.(msh.position, 2), getindex.(msh.position, 3),
+#         color=tridelaunayplotf.vcolor, markersize=tridelaunayplotf.vmarkersize)
+#     tridelaunayplotf
+# end 
+
+# """
+#     tridelaunayplotf(tridln::TriDelaunay, f)
+
+# Plots the TriDelaunay `tridln`
+# """
+# function tridelaunayplotf end 
