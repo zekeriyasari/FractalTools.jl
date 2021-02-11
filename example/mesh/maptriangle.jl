@@ -26,7 +26,9 @@ _, msh3 = triangulate(pnts3d)
 outtrig = findouttriangle(pnts3d)
 outtrigpnts2d = project(outtrig.points)
 
+# Add observables for interactivity
 i = Node(39) 
+
 ttrig = @lift(msh3[$i])
 
 ttrigpnts2d = lift(ttrig) do ttrig 
@@ -39,6 +41,7 @@ mtrig = lift(ttrig) do ttrig
     Triangle(map(pnt -> Point(L(pnt)...), outtrigpnts2d)...)
 end 
 
+# Plot figures 
 fig = Figure() 
 ls = LScene(fig[1, 1])
 buttongrid = fig[1, 2] =  GridLayout(tellheight=false)
@@ -51,6 +54,7 @@ mesh!(ttrig, color=:blue)
 wireframe!(ttrigpnts2d, color=:blue, linewidth=3)
 mesh!(mtrig, color=:green)
 
+# Button intrections
 on(button1.clicks) do n 
     i[] += 1
     label.text[] = "Tri idx: " * string(i[])
