@@ -1,8 +1,12 @@
 #  This file includes mesh related methods. 
 
-export boundarypoints, isvalidpoint, getpoint, box, project, triangulate, findouttriangle, interpolate, gettransform, disperse
+export boundarypoints, isvalidpoint, getpoint, box, project, triangulate, findouttriangle, interpolate, gettransform, disperse, getdata
 
+"""
+    $SIGNATURES 
 
+Returns boundary points of on the edges of the triangle `p1, p2, p3`. `numpoints` is the number of points on the edges of the triangle.
+"""
 function boundarypoints(p1::Point, p2::Point, p3::Point; numpoints::Int=10)
     vcat(
         linepoint(p1, p2, numpoints=numpoints), 
@@ -11,15 +15,30 @@ function boundarypoints(p1::Point, p2::Point, p3::Point; numpoints::Int=10)
         )
 end 
 
+"""
+    $SIGNATURES
+
+Returns the points of the edge whose end points are `p1` and `p2`. `numpoints` is the number of points. 
+"""
 function linepoint(p1::Point, p2::Point; numpoints::Int=10) 
     x = collect(range(p1[1], p2[1], length=numpoints))
     y = collect(range(p1[2], p2[2], length=numpoints))
     [Point(xi, yi) for (xi, yi) in zip(x, y)]
 end
 
+""""
+    $SIGNATURES
+
+Returns true if `pnt` is in `trig`. 
+"""
 isvalidpoint(pnt::Point, trig::Triangle) = pnt ∈ trig && pnt !== Point(NaN, NaN)
 
-# Returns a valid point inside the triangle of the tridln
+
+"""
+    $SIGNATURES
+
+Returns a random valid point in `tri`. `maxiters` is the number of iteration while finding the point. 
+"""
 function getpoint(tri::Triangle; maxiter::Int=100_000) 
     A, b = box(tri.points...) 
     iter = 1 
@@ -32,7 +51,11 @@ function getpoint(tri::Triangle; maxiter::Int=100_000)
     return Point(NaN, NaN)  # For type-stability 
 end 
 
-# Returns the bouding box to the delaunay 
+"""
+    $SIGNATURES 
+
+Returns the matrix `A` and a vector `b` such that for any point `p` the transformation `T(p) = A * p + b` moves `p` into the bounding box of the triangule formed by the points `p1, p2, p3`.  
+"""
 function box(p1::Point, p2::Point, p3::Point)
     x, y = first.([p1, p2, p3]), last.([p1, p2, p3]) 
     xmin, xmax, ymin, ymax = minimum(x), maximum(x), minimum(y), maximum(y)
@@ -42,8 +65,18 @@ function box(p1::Point, p2::Point, p3::Point)
     A, b
 end
 
+"""
+    $SIGNATURES
+
+Returns the two-dimensional projections of the three-dimensional points `pnts3d`
+"""
 project(pnts3d) = [Point(pnt[1], pnt[2]) for pnt in pnts3d]
 
+"""
+    $SIGNATURES
+
+Returns a tuple of a Delaunay tessellation and a correspoding three dimensional mesh. 
+"""
 function triangulate(pnts3d) 
     pnts2d = project(pnts3d)
     tess = spt.Delaunay(pnts2d)
@@ -51,12 +84,22 @@ function triangulate(pnts3d)
     tess, GeometryBasics.Mesh(pnts3d, trifaces)
 end 
 
+"""
+    $SIGNATURES 
+
+Returns the bounding triangle of the points `pnts3d`.
+"""
 function findouttriangle(pnts3d)
     pnts2d = project(pnts3d)
     hull = spt.ConvexHull(collect(hcat(collect.(pnts2d)...)') )
     Triangle(Point.(pnts3d[hull.vertices .+ 1])...)
 end
 
+"""
+    $SIGNATURES
+
+Returns a fractal surface interpolation function that interpolates `pnts3d`.
+"""
 function interpolate(pnts3d; α=0.01, f0 = (x, y) -> 0., maxiters=15, gettransforms::Bool=false)
     # Fint convex hull, i.e, the boundary triangle 
     outtrig = findouttriangle(pnts3d)
@@ -85,6 +128,11 @@ function interpolate(pnts3d; α=0.01, f0 = (x, y) -> 0., maxiters=15, gettransfo
 	gettransforms ? (interpolant, transforms) : interpolant
 end 
 
+"""
+    $SIGNATURES
+
+Returns a named tuple of `A` and` `b` such that `L(x) = A * x + b` maps `outtrig` to `intrig`. 
+"""
 function gettransform(outtrig, intrig, α::Real=1.) 
     outmat = collect(hcat(coordinates(outtrig)...)')
     inmat = collect(hcat(coordinates(intrig)...)')
@@ -97,11 +145,23 @@ function gettransform(outtrig, intrig, α::Real=1.)
     b = [   sol[3, 1],  sol[3, 2],  sol[3, 3]   ])
 end 
 
+"""
+    $SIGNATURES 
+
+Returns a vector of random points that are dispersed into `trig`. `npoints` is the number of points to be dispersed. 
+"""
 function disperse(trig, npoints) 
     allpnts = [getpoint(trig) for i in 1 : 10 * npoints]
     ctrpnts = [Point(val[1], val[2]) for val in eachcol(kmeans(hcat(collect.(allpnts)...), npoints).centers)]
     vcat(trig.points, boundarypoints(trig.points...), ctrpnts)
 end
+
+"""
+    $SIGNATURES
+
+Returns a three-dimensional interpolation data `pnts`. `pnts` is a vector of three-dimensional points `pi = Point(xi, yi, zi)` where `xi` and `yi` are from the dispersed points and `zi = f(xi, yi)`. 
+"""
+getdata(f, trig::Triangle, npts::Int) = [Point(pnt[1], pnt[2], f(pnt[1], pnt[2])) for pnt in disperse(trig, npts)] 
 
 
 # export TriDelaunay, addpoint!, tomesh, npoints, locate, finegrain!, points, simplices, getpoint, tridelaunayplot, tridelaunayplotf

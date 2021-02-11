@@ -1,7 +1,6 @@
 using GeometryBasics 
 using Makie 
 using FractalTools 
-
 using Random 
 Random.seed!(0)
 
