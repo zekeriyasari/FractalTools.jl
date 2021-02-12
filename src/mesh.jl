@@ -1,6 +1,7 @@
 #  This file includes mesh related methods. 
 
-export boundarypoints, isvalidpoint, getpoint, box, project, triangulate, findouttriangle, interpolate, gettransform, disperse, getdata
+export boundarypoints, isvalidpoint, getpoint, box, project, triangulate, findouttriangle, interpolate, gettransform, disperse, getdata 
+export trisurf 
 
 """
     $SIGNATURES 
@@ -70,7 +71,14 @@ end
 
 Returns the two-dimensional projections of the three-dimensional points `pnts3d`
 """
-project(pnts3d) = [Point(pnt[1], pnt[2]) for pnt in pnts3d]
+project(pnts3d::AbstractVector{<:Point}) = [Point(pnt[1], pnt[2]) for pnt in pnts3d]
+
+"""
+    $SIGNATURES
+
+Returns a two dimensional mesh whose points are the projections of `msh3`. 
+"""
+project(msh3::GeometryBasics.Mesh) = GeometryBasics.Mesh(project(msh3.position), copy(faces(msh3)))
 
 """
     $SIGNATURES
@@ -113,9 +121,10 @@ function interpolate(pnts3d; α=0.01, f0 = (x, y) -> 0., maxiters=15, gettransfo
     # Define mapping 
     function mapping(f)
 		function fnext(xd, yd)
-            pnt = [xd, yd]
+            pnt = Point(xd, yd)
+            @info pnt 
 			idx = tess.find_simplex(pnt)[1] + 1  
-            idx == 0 && return NaN
+            idx == 0 && error("$pnt not found")
             transform = transforms[idx]
             A, b = transform.A, transform.b
 			linv = A[1:2, 1:2] \ (pnt - b[1:2])
@@ -162,6 +171,37 @@ end
 Returns a three-dimensional interpolation data `pnts`. `pnts` is a vector of three-dimensional points `pi = Point(xi, yi, zi)` where `xi` and `yi` are from the dispersed points and `zi = f(xi, yi)`. 
 """
 getdata(f, trig::Triangle, npts::Int) = [Point(pnt[1], pnt[2], f(pnt[1], pnt[2])) for pnt in disperse(trig, npts)] 
+
+
+# ---------------------------------- Plot recipe ------------------------------------------------------ # 
+
+
+@recipe(Trisurf, msh, f) do scene 
+    Attributes(
+        wireframe2 = false,
+        wfcolor = :black,
+        wflinewidth = 2,
+        vmarkercolor = :red,
+        wflinewidth3 = 3,
+        vmarkercolor3 = :orange, 
+        vmarkersize3 = 20,
+    )
+end
+
+function AbstractPlotting.plot!(plt::Trisurf) 
+    msh2 = plt[1][]
+    msh3 = plt[2][]
+    mesh!(plt, msh3, color=first.(msh3.position)) 
+    wireframe!(plt, msh3, linewidth=plt.wflinewidth3)
+    plt
+end
+
+function AbstractPlotting.convert_arguments(::Type{<:Trisurf}, msh2::GeometryBasics.Mesh, f::Function)
+    msh3 = GeometryBasics.Mesh(
+        [Point(pnt[1], pnt[2], f(pnt[1], pnt[2])) for pnt in msh2.position], faces(msh2)
+        )
+    return (msh2, msh3)
+end 
 
 
 # export TriDelaunay, addpoint!, tomesh, npoints, locate, finegrain!, points, simplices, getpoint, tridelaunayplot, tridelaunayplotf
