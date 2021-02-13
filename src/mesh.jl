@@ -122,7 +122,7 @@ function interpolate(pnts3d; α=0.01, f0 = (x, y) -> 0., maxiters=15, gettransfo
     function mapping(f)
 		function fnext(xd, yd)
             pnt = Point(xd, yd)
-            @info pnt 
+            # @info pnt 
 			idx = tess.find_simplex(pnt)[1] + 1  
             idx == 0 && error("$pnt not found")
             transform = transforms[idx]
@@ -185,23 +185,39 @@ getdata(f, trig::Triangle, npts::Int) = [Point(pnt[1], pnt[2], f(pnt[1], pnt[2])
         wflinewidth3 = 3,
         vmarkercolor3 = :orange, 
         vmarkersize3 = 20,
+        meshcolor3 = :black
     )
 end
 
 function AbstractPlotting.plot!(plt::Trisurf) 
-    msh2 = plt[1][]
-    msh3 = plt[2][]
-    mesh!(plt, msh3, color=first.(msh3.position)) 
+    msh3 = plt[1][]
+    mesh!(plt, msh3, color=plt.meshcolor3) 
     wireframe!(plt, msh3, linewidth=plt.wflinewidth3)
     plt
 end
 
 function AbstractPlotting.convert_arguments(::Type{<:Trisurf}, msh2::GeometryBasics.Mesh, f::Function)
-    msh3 = GeometryBasics.Mesh(
-        [Point(pnt[1], pnt[2], f(pnt[1], pnt[2])) for pnt in msh2.position], faces(msh2)
-        )
-    return (msh2, msh3)
+    msh3 = GeometryBasics.Mesh([Point(pnt[1], pnt[2], f(pnt[1], pnt[2])) for pnt in msh2.position], faces(msh2))
+    return (msh3, msh2, f)
 end 
+
+function AbstractPlotting.convert_arguments(::Type{<:Trisurf}, pnts::AbstractVector{<:Point2}, f::Function) 
+    tess = spt.Delaunay(pnts) 
+    _position = [Point(pnt[1], pnt[2], f(pnt[1], pnt[2])) for pnt in eachrow(tess.points)]
+    _faces = [TriangleFace(val[1], val[2], val[3]) for val in eachrow(tess.simplices .+ 1)]
+    msh3 = GeometryBasics.Mesh(_position, _faces)
+    return (msh3, pnts, f)
+end 
+
+function AbstractPlotting.convert_arguments( ::Type{<:Trisurf}, pnts2d::AbstractVector{<:Point2}, pnts1d::AbstractVector{<:Point1})
+    tess = spt.Delaunay(pnts2d) 
+    _position = [Point(pnt2[1], pnt2[2], pnt1[1]) for (pnt2, pnt1) in zip(pnts2d, pnts1d)]
+    _faces = [TriangleFace(val[1], val[2], val[3]) for val in eachrow(tess.simplices .+ 1)]
+    msh3 = GeometryBasics.Mesh(_position, _faces)
+    return (msh3, pnts2d, pnts1d)
+end 
+
+
 
 
 # export TriDelaunay, addpoint!, tomesh, npoints, locate, finegrain!, points, simplices, getpoint, tridelaunayplot, tridelaunayplotf
