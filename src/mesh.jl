@@ -119,22 +119,24 @@ function interpolate(pnts3d; α=0.01, f0 = (x, y) -> 0., maxiters=15, gettransfo
     transforms = map(intrig -> gettransform(outtrig, intrig, α), msh3)
 
     # Define mapping 
+    # footprints = Point2{Float64}[]      # Uncomment to make a container for the footprints of any point 
     function mapping(f)
 		function fnext(xd, yd)
             pnt = Point(xd, yd)
-            # @info pnt 
+            # push!(footprints, pnt)
 			idx = tess.find_simplex(pnt)[1] + 1  
-            idx == 0 && error("$pnt not found")
+            idx == 0 && return NaN 
             transform = transforms[idx]
             A, b = transform.A, transform.b
 			linv = A[1:2, 1:2] \ (pnt - b[1:2])
 			A[3, 1 : 2] ⋅ linv + α * f(linv[1], linv[2]) + b[3]
-		end
+        end
 	end 
 
     # Main iteration of the fractal interpolation.
     interpolant = ∘((mapping for i in 1 : maxiters)...)(f0)
 	gettransforms ? (interpolant, transforms) : interpolant
+	# gettransforms ? (interpolant, transforms, footprints) : (interpolant, footprints)
 end 
 
 """
@@ -185,13 +187,15 @@ getdata(f, trig::Triangle, npts::Int) = [Point(pnt[1], pnt[2], f(pnt[1], pnt[2])
         wflinewidth3 = 3,
         vmarkercolor3 = :orange, 
         vmarkersize3 = 20,
-        meshcolor3 = :black
+        meshcolor3 = :black,
+        colormap = :viridis,
+        visible = true
     )
 end
 
 function AbstractPlotting.plot!(plt::Trisurf) 
     msh3 = plt[1][]
-    mesh!(plt, msh3, color=plt.meshcolor3) 
+    mesh!(plt, msh3, color=plt.meshcolor3, colormap=plt.colormap, visible=plt.visible) 
     wireframe!(plt, msh3, linewidth=plt.wflinewidth3)
     plt
 end
@@ -215,6 +219,14 @@ function AbstractPlotting.convert_arguments( ::Type{<:Trisurf}, pnts2d::Abstract
     _faces = [TriangleFace(val[1], val[2], val[3]) for val in eachrow(tess.simplices .+ 1)]
     msh3 = GeometryBasics.Mesh(_position, _faces)
     return (msh3, pnts2d, pnts1d)
+end 
+
+function AbstractPlotting.convert_arguments( ::Type{<:Trisurf}, pnts3d::AbstractVector{<:Point3})
+    pnts2d = project(pnts3d)
+    tess = spt.Delaunay(pnts2d) 
+    fcs = [TriangleFace(val[1], val[2], val[3]) for val in eachrow(tess.simplices .+ 1)]
+    msh3 = GeometryBasics.Mesh(pnts3d, fcs)
+    return (msh3, pnts3d)
 end 
 
 
