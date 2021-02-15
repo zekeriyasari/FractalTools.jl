@@ -14,6 +14,7 @@ using NearestNeighbors
 using GeometryBasics
 using Clustering
 using AbstractPlotting
+using StaticArrays
 
 include("mesh.jl")
 

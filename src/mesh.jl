@@ -100,7 +100,19 @@ Returns the bounding triangle of the points `pnts3d`.
 function findouttriangle(pnts3d)
     pnts2d = project(pnts3d)
     hull = spt.ConvexHull(collect(hcat(collect.(pnts2d)...)') )
-    Triangle(Point.(pnts3d[hull.vertices .+ 1])...)
+    if length(hull.vertices) == 3
+        # If the convex hull is a triangle, just return the triangle 
+        Triangle(Point.(pnts3d[hull.vertices .+ 1])...)
+    else 
+        # If the the convex hull is not a triangle but a polygon, construct the 
+        # boundary polygon 
+        polygon = GeometryBasics.Ngon(
+            SVector{length(hull.vertices)}(Point.(pnts3d[hull.vertices .+ 1]))
+        )
+        msh = GeometryBasics.mesh(polygon)
+        idx = argmax([area(trig.points) for trig in msh])
+        msh[idx]
+    end 
 end
 
 """
