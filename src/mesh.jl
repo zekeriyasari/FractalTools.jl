@@ -132,6 +132,7 @@ Returns the bounding triangle of the points `pnts3d`.
 function findouttriangle(pnts3d)
     pnts2d = project(pnts3d)
     # TODO: Call c code directly
+    # TODO: Check convecity and divide into convex dokmains.
     hull = spt.ConvexHull(collect(hcat(collect.(pnts2d)...)') )
     if length(hull.vertices) == 3
         # If the convex hull is a triangle, just return the triangle 
