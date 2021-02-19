@@ -22,8 +22,7 @@ fractal_interpolant = FractalTools.interpolate(data_points_3d)
 spline_interpolant = Interpolations.interpolate(
     (unique(getindex.(data_points_3d, 1)), unique(getindex.(data_points_3d, 2))),       # x-y gridded data 
     collect(reshape(getindex.(data_points_3d, 3), ndata, ndata)),                       # z values 
-    Gridded(Quadratic(Reflect(OnCell())))                                                                   # Interpolation type 
-    # Gridded(Linear())                                                                   # Interpolation type 
+    Gridded(Linear())                                                                   # Interpolation type 
 )
 
 # Evaluations 
