@@ -27,6 +27,7 @@ end
 # Construct gui
 _, msh3 = triangulate(pnts3d)
 msh2 = project(msh3)
+pnts2d = project(pnts3d)   
 
 fig         = Figure() 
 lb          = Label(fig, "Show Interpolant") 
@@ -48,10 +49,10 @@ tog.active[] = false
 
 display(fig)
 
-fps = 60
-record(fig.scene, "errorplot.mp4"; framerate = fps) do io
-    for i = 1 : 10 * fps
-        sleep(1/fps)
-        recordframe!(io)
-    end
-end
+# fps = 60
+# record(fig.scene, "errorplot.mp4"; framerate = fps) do io
+#     for i = 1 : 10 * fps
+#         sleep(1/fps)
+#         recordframe!(io)
+#     end
+# end

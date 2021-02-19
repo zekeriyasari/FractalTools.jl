@@ -6,27 +6,22 @@ using FractalTools
 using GeometryBasics 
 using LinearAlgebra
 
-Random.seed!(0)
-
 # Get interpolation data 
-pts = [
-    Point(-1., -1), 
-    Point(1., -1.), 
-    Point(0., 2.)
-]
-trig = Triangle(pts...)
+trig  = Triangle(
+    Point(BigFloat(-1.), BigFloat(-1)), 
+    Point(BigFloat(1.), BigFloat(-1.)), 
+    Point(BigFloat(0.), BigFloat(2.))
+)
 f(x, y) = x^2 + y^2 + 1
 pnts3d = getdata(f, trig, 100)
 
-# Define errors 
-relerr(x, y) = (fval = f(x, y); abs(itp(x,y) - fval) / abs(fval) * 100)
-
 # Construct test points 
-tpnts = [getpoint(trig) for i in 1 : 100]
+tpnts3d = getdata(f, trig, 100)
+tpnts = project(tpnts3d)
 
 α = Node(0.001)
 niter = Node(1) 
-err = lift(niter, α ) do n, α 
+err = lift(niter, α) do n, α 
     itp = interpolate(pnts3d, α=α, maxiters=n)
     fval = map(pnt -> f(pnt...), tpnts)  
     ival = map(pnt -> itp(pnt...), tpnts) 
@@ -68,11 +63,11 @@ end
 
 display(fig)
 
-# For video recording.
-fps = 60
-record(fig.scene, "demo.mp4"; framerate = fps) do io
-    for i = 1 : 50 * fps
-        sleep(1/fps)
-        recordframe!(io)
-    end
-end
+# # For video recording.
+# fps = 60
+# record(fig.scene, "demo.mp4"; framerate = fps) do io
+#     for i = 1 : 50 * fps
+#         sleep(1/fps)
+#         recordframe!(io)
+#     end
+# end

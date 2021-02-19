@@ -12,6 +12,7 @@ using LinearAlgebra
 using NearestNeighbors
 
 using GeometryBasics
+import GeometryBasics: Ngon
 using Clustering
 using AbstractPlotting
 using StaticArrays

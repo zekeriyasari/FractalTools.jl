@@ -8,12 +8,15 @@ export trisurf
 
 Returns boundary points of on the edges of the triangle `p1, p2, p3`. `numpoints` is the number of points on the edges of the triangle.
 """
-function boundarypoints(p1::Point, p2::Point, p3::Point; numpoints::Int=10)
+function boundarypoints(ngon::Ngon; numpoints::Int=10)
     vcat(
-        linepoint(p1, p2, numpoints=numpoints), 
-        linepoint(p1, p3, numpoints=numpoints), 
-        linepoint(p2, p3, numpoints=numpoints)
+        map(((pnt1, pnt2),) -> linepoint(pnt1, pnt2), TupleView{2, 1}(SVector([ngon.points; [ngon.points[1]]]...)))...
         )
+    # vcat(
+    #     linepoint(p1, p2, numpoints=numpoints), 
+    #     linepoint(p1, p3, numpoints=numpoints), 
+    #     linepoint(p2, p3, numpoints=numpoints)
+    #     )
 end 
 
 """
@@ -22,31 +25,33 @@ end
 Returns the points of the edge whose end points are `p1` and `p2`. `numpoints` is the number of points. 
 """
 function linepoint(p1::Point, p2::Point; numpoints::Int=10) 
-    x = collect(range(p1[1], p2[1], length=numpoints))
-    y = collect(range(p1[2], p2[2], length=numpoints))
+    x = collect(LinRange(p1[1], p2[1], numpoints))
+    y = collect(LinRange(p1[2], p2[2], numpoints))
     [Point(xi, yi) for (xi, yi) in zip(x, y)]
 end
 
 """"
     $SIGNATURES
 
-Returns true if `pnt` is in `trig`. 
+Returns true if `pnt` is in `tess`. 
 """
-isvalidpoint(pnt::Point, trig::Triangle) = pnt ∈ trig && pnt !== Point(NaN, NaN)
+isvalidpoint(pnt::Point, tess) = tess.find_simplex(pnt)[1] ≥ 0 && pnt !== Point(NaN, NaN)
 
 
 """
     $SIGNATURES
 
-Returns a random valid point in `tri`. `maxiters` is the number of iteration while finding the point. 
+Returns a random valid point in `ngon`. `maxiters` is the number of iteration while finding the point. 
 """
-function getpoint(tri::Triangle; maxiter::Int=100_000) 
-    A, b = box(tri.points...) 
+function getpoint(ngon::Ngon; maxiter::Int=100_000) 
+    tess = spt.Delaunay(coordinates(ngon))
+    A, b = box(ngon) 
     iter = 1 
     while iter ≤ maxiter 
         val = A * rand(2) + b 
-        pnt = Point(val[1], val[2]) 
-        isvalidpoint(pnt, tri) && return pnt
+        # pnt = Point(val[1], val[2]) 
+        pnt = Point(BigFloat(val[1]), BigFloat(val[2])) 
+        isvalidpoint(pnt, tess) && return pnt
         iter += 1
     end 
     return Point(NaN, NaN)  # For type-stability 
@@ -55,10 +60,37 @@ end
 """
     $SIGNATURES 
 
-Returns the matrix `A` and a vector `b` such that for any point `p` the transformation `T(p) = A * p + b` moves `p` into the bounding box of the triangule formed by the points `p1, p2, p3`.  
+Returns a vector of random points that are dispersed into `ngon`. `npoints` is the number of points to be dispersed. 
 """
-function box(p1::Point, p2::Point, p3::Point)
-    x, y = first.([p1, p2, p3]), last.([p1, p2, p3]) 
+function disperse(ngon, npoints) 
+    allpnts = [getpoint(ngon) for i in 1 : 10 * npoints]
+    ctrpnts = [Point(val[1], val[2]) for val in eachcol(kmeans(hcat(collect.(allpnts)...), npoints).centers)]
+    vcat(ngon.points, boundarypoints(ngon), ctrpnts)
+end
+
+"""
+    $SIGNATURES
+
+Filters under quality triangles
+"""
+function filtertriangle(quality, args...; kwargs...) end 
+
+"""
+    $SIGNATURES
+
+Returns a three-dimensional interpolation data `pnts`. `pnts` is a vector of three-dimensional points `pi = Point(xi, yi, zi)` where `xi` and `yi` are from the dispersed points and `zi = f(xi, yi)`. 
+"""
+getdata(f, ngon::Ngon, npts::Int) = [Point(pnt[1], pnt[2], f(pnt[1], pnt[2])) for pnt in disperse(ngon, npts)] 
+
+
+"""
+    $SIGNATURES 
+
+Returns the matrix `A` and a vector `b` such that for any point `p` the transformation `T(p) = A * p + b` moves `p` into the bounding box of the ngon formed by the points `p1, p2, p3`.  
+"""
+function box(ngon::Ngon)
+    coords = coordinates(ngon) 
+    x, y = getindex.(coords, 1), getindex.(coords, 2) 
     xmin, xmax, ymin, ymax = minimum(x), maximum(x), minimum(y), maximum(y)
     xwidth, ywidth = xmax - xmin, ymax - ymin 
     A = [xwidth 0; 0 ywidth]
@@ -99,14 +131,16 @@ Returns the bounding triangle of the points `pnts3d`.
 """
 function findouttriangle(pnts3d)
     pnts2d = project(pnts3d)
+    # TODO: Call c code directly
     hull = spt.ConvexHull(collect(hcat(collect.(pnts2d)...)') )
     if length(hull.vertices) == 3
         # If the convex hull is a triangle, just return the triangle 
         Triangle(Point.(pnts3d[hull.vertices .+ 1])...)
     else 
         # If the the convex hull is not a triangle but a polygon, construct the 
-        # boundary polygon 
-        polygon = GeometryBasics.Ngon(
+        # boundary polygon, construct a mesh from the polygon and return the 
+        # maximum triangle with the maximum area.
+        polygon = Ngon(
             SVector{length(hull.vertices)}(Point.(pnts3d[hull.vertices .+ 1]))
         )
         msh = GeometryBasics.mesh(polygon)
@@ -168,24 +202,6 @@ function gettransform(outtrig, intrig, α::Real=1.)
     b = [   sol[3, 1],  sol[3, 2],  sol[3, 3]   ])
 end 
 
-"""
-    $SIGNATURES 
-
-Returns a vector of random points that are dispersed into `trig`. `npoints` is the number of points to be dispersed. 
-"""
-function disperse(trig, npoints) 
-    allpnts = [getpoint(trig) for i in 1 : 10 * npoints]
-    ctrpnts = [Point(val[1], val[2]) for val in eachcol(kmeans(hcat(collect.(allpnts)...), npoints).centers)]
-    vcat(trig.points, boundarypoints(trig.points...), ctrpnts)
-end
-
-"""
-    $SIGNATURES
-
-Returns a three-dimensional interpolation data `pnts`. `pnts` is a vector of three-dimensional points `pi = Point(xi, yi, zi)` where `xi` and `yi` are from the dispersed points and `zi = f(xi, yi)`. 
-"""
-getdata(f, trig::Triangle, npts::Int) = [Point(pnt[1], pnt[2], f(pnt[1], pnt[2])) for pnt in disperse(trig, npts)] 
-
 
 # ---------------------------------- Plot recipe ------------------------------------------------------ # 
 
@@ -241,216 +257,3 @@ function AbstractPlotting.convert_arguments( ::Type{<:Trisurf}, pnts3d::Abstract
     return (msh3, pnts3d)
 end 
 
-
-
-
-# export TriDelaunay, addpoint!, tomesh, npoints, locate, finegrain!, points, simplices, getpoint, tridelaunayplot, tridelaunayplotf
-
-# """
-#     $TYPEDEF
-
-# Delaunay tessellation in a triangle 
-# """
-# mutable struct TriDelaunay{TS,TR}
-#     "Delaunay tesselation"
-#     delaunay::TS
-#     "Boundary triangle"
-#     triangle::TR
-# end 
-
-# """
-#     $SIGNATURES 
-
-# Construct a Delaunay triangulation from the points `p1, p2, p3`
-# """
-# function TriDelaunay(p1::AbstractVector, p2::AbstractVector, p3::AbstractVector; addboundarypoints::Bool=true) 
-#     p1, p2, p3, p4 = Point(p1...), Point(p2...), Point(p3...), Point(((p1 + p2 + p3) / 3)...)
-#     triangle = Triangle(p1, p2, p3)
-#     pnts = [p1, p2, p3, p4]
-#     addboundarypoints && append!(pnts,  boundarypoints(p1, p2, p3))
-#     delaunay = spt.Delaunay(pnts, incremental=true)
-#     TriDelaunay(delaunay, triangle)
-# end
-
-# function boundarypoints(p1, p2, p3; numpoints::Int=10)
-#     vcat([p1, p2, p3], 
-#     linepoint(p1, p2, numpoints=numpoints), 
-#     linepoint(p1, p3, numpoints=numpoints), 
-#     linepoint(p2, p3, numpoints=numpoints))
-# end 
-
-# function linepoint(p1, p2; numpoints::Int=10) 
-#     x = collect(range(p1[1], p2[1], length=numpoints))
-#     y = collect(range(p1[2], p2[2], length=numpoints))
-#     [Point(xi, yi) for (xi, yi) in zip(x, y)]
-# end
-
-
-# # --------------------------------------- Adding a new point to Tessellation ----------------------------- # 
-
-
-# """
-#     $SIGNATURES
-
-# Adds a point inside the delaunay by preserving delauneyhood.
-# """
-# function addpoint!(tridln::TriDelaunay, pnt::Point2=getpoint(tridln))
-#     isvalidpoint(pnt, tridln) && tridln.delaunay.add_points([pnt])
-#     pnt 
-# end 
-
-# isvalidpoint(pnt::AbstractVector, trig::Triangle) = pnt ∈ trig && pnt !== Point(NaN, NaN)
-
-# # Returns a valid point inside the triangle of the tridln
-# function getpoint(tri::Triangle; maxiter::Int=100_000) 
-#     A, b = box(tri.points...) 
-#     iter = 1 
-#     while iter ≤ maxiter 
-#         val = A * rand(2) + b 
-#         pnt = Point(val[1], val[2]) 
-#         isvalidpoint(pnt, tri) && return pnt
-#         iter += 1
-#     end 
-#     return Point(NaN, NaN)  # For type-stability 
-# end 
-# getpoint(tridln::TriDelaunay; maxiters::Int=100_000) = getpoint(tridln.triangle, maxiters=maxiters)
-
-# # --------------------------------------- Delaunay Tessellation to Mesh Coversition ------------------------ # 
-
-
-# """
-#     $SIGNATURES 
-
-# Constructs a GeometryBasic.Mesh from `tridln` ready for plotting.
-# """
-# function tomesh(tri)
-#     vs = [Point(val...) for val in eachrow(tri.points)]
-#     fs = [TriangleFace(val...) for val in eachrow(tri.simplices .+ 1)]
-#     GeometryBasics.Mesh(vs, fs)
-# end 
-
-# """
-#     $SIGNATURES 
-
-# Constructs a three dimensional GeometryBasics.Mesh from `tri` ready for ploting.
-# """
-# function tomesh(tri, f)
-#     vs = [Point3f0(pnt..., f(pnt...)) for pnt in eachrow(tri.points )]
-#     fs = [TriangleFace(trig...) for trig in eachrow(tri.simplices .+ 1)]
-#     GeometryBasics.Mesh(vs, fs)
-# end 
-
-# # Returns the bouding box to the delaunay 
-# function box(p1::AbstractVector, p2::AbstractVector, p3::AbstractVector)
-#     x, y = first.([p1, p2, p3]), last.([p1, p2, p3]) 
-#     xmin, xmax, ymin, ymax = minimum(x), maximum(x), minimum(y), maximum(y)
-#     xwidth, ywidth = xmax - xmin, ymax - ymin 
-#     A = [xwidth 0; 0 ywidth]
-#     b = [xmin, ymin] 
-#     A, b
-# end
-
-
-# # --------------------------------------- Accesing the internals ----------------------------------- # 
-
-
-# """
-#     $SIGNATURES 
-
-# Returns the number of points in `tridln`.
-# """
-# npoints(tridln::TriDelaunay) = tridln.delaunay.npoints
-
-# """
-#     $SIGNATURES 
-
-# Returns the coordinates of the points of `tridln`. 
-# """
-# points(tridln::TriDelaunay) = tridln.delaunay.points
-
-# """
-#     $SIGNATURES 
-
-# Returns the simplices of `tridln` 
-# """
-# simplices(tridln::TriDelaunay) = tridln.delaunay.simplices .+ 1
-
-
-# # --------------------------------------------- Point Locating --------------------------------------------- # 
-
-
-# """
-#     $SIGNATURES 
-
-# Returns the triangle index of `tridln` in which the `point` is.
-# """
-# function locate(tridln::TriDelaunay, point::AbstractVector)
-#     idx = tridln.delaunay.find_simplex(point)[1] + 1
-#     idx == 0 ? error("The point $point cannot be located") : idx
-# end 
-
-# function finegrain!(tridln::TriDelaunay, npnts::Int)   
-#     pnts = [Point(val[1], val[2]) for val in eachrow(tridln.delaunay.points)]
-#     centers = clustercenters(pnts, npnts) 
-#     tridln.delaunay = spt.Delaunay(append!(centers, boundarypoints(tridln.triangle.points...)), incremental=true)
-#     tridln
-# end 
-
-# function clustercenters(pnts, numpoints) 
-#     mat = [getindex.(pnts, 1) getindex.(pnts, 2)]
-#     [Point(val[1], val[2]) for val in eachcol(kmeans(mat', numpoints).centers)]
-# end 
-
-
-# # --------------------------------------- Plots recipe for Makie ---------------------------------- # 
-
-
-# @recipe(TriDelaunayPlot, tridln) do scene 
-#     AbstractPlotting.Attributes(
-#         vcolor = :red,
-#         vmarkersize = 10,
-#         lwidth = 3
-#     )
-# end 
-
-# function AbstractPlotting.plot!(tridelaunayplot::TriDelaunayPlot)
-#     msh = tomesh(tridelaunayplot[:tridln][].delaunay)
-#     AbstractPlotting.mesh!(tridelaunayplot, msh, color=first.(msh.position))
-#     AbstractPlotting.wireframe!(tridelaunayplot, msh, linewidth=tridelaunayplot.lwidth) 
-#     AbstractPlotting.scatter!(tridelaunayplot, getindex.(msh.position, 1), getindex.(msh.position, 2), 
-#         color=tridelaunayplot.vcolor, markersize=tridelaunayplot.vmarkersize)
-#     tridelaunayplot
-# end 
-
-# """
-#     tridelaunayplot(tridln::TriDelaunay)
-
-# Plots the TriDelaunay `tridln`
-# """
-# function tridelaunayplot end 
-
-
-# @recipe(tridelaunayplotF, tridln, f) do scene 
-#     AbstractPlotting.Attributes(
-#         vcolor = :red,
-#         vmarkersize = 10,
-#         lwidth = 3
-#     )
-# end 
-
-# function AbstractPlotting.plot!(tridelaunayplotf::tridelaunayplotF)
-#     msh = tomesh(tridelaunayplotf[:tridln][].delaunay , tridelaunayplotf[:f][])
-#     AbstractPlotting.mesh!(tridelaunayplotf, msh, color=first.(msh.position))
-#     AbstractPlotting.wireframe!(tridelaunayplotf, msh, linewidth=tridelaunayplotf.lwidth) 
-#     AbstractPlotting.scatter!(tridelaunayplotf, 
-#         getindex.(msh.position, 1), getindex.(msh.position, 2), getindex.(msh.position, 3),
-#         color=tridelaunayplotf.vcolor, markersize=tridelaunayplotf.vmarkersize)
-#     tridelaunayplotf
-# end 
-
-# """
-#     tridelaunayplotf(tridln::TriDelaunay, f)
-
-# Plots the TriDelaunay `tridln`
-# """
-# function tridelaunayplotf end 

@@ -6,9 +6,9 @@ Random.seed!(0)
 
 # Define the triangle 
 trig = Triangle(
-    Point(-1., -1.), 
-    Point(1., -1.), 
-    Point(0., 2)
+    Point(BigFloat(-1.), BigFloat(-1.)), 
+    Point(BigFloat(1.), BigFloat(-1.)), 
+    Point(BigFloat(0.), BigFloat(2))
 )
 
 # Get valid points in the domain 

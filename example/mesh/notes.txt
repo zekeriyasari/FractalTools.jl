@@ -1,0 +1,3 @@
+1. Find the computationnal complexity with respect to number of points.
+2. Find the computationnal complexity with changing floating point precision.
+3. Find the relation between scaling factor
