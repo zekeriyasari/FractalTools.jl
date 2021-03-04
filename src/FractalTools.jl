@@ -1,21 +1,17 @@
 module FractalTools
 
-import Base: show, display
-import StatsBase: sample, Weights
 using DocStringExtensions
-using LinearAlgebra 
 using Distributed
-using Combinatorics
 using PyCall
-using HCubature
 using LinearAlgebra
-using NearestNeighbors
-
 using GeometryBasics
-import GeometryBasics: Ngon
 using Clustering
 using AbstractPlotting
 using StaticArrays
+
+import GeometryBasics: Ngon
+import Base: show, display
+import StatsBase: sample, Weights
 
 include("mesh.jl")
 
