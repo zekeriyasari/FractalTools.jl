@@ -10,7 +10,7 @@ y = sin.(2π * x)
 d = 0.01 * ones(length(x) - 1)
 
 # Interpolate the data 
-interp = fif(x, y, d) 
+interp = interpolate(x, y, d) 
 
 # Get transformations 
 ws = interp.ifs.ws

@@ -63,7 +63,7 @@ begin
 	hv =  h * ones(length(x) - 1)
 	lv =  l * ones(length(x) - 1)
 	mv =  m * ones(length(x) - 1)
-	interp = fif(x, y, d = dv, niter=niter)
+	interp = interpolate(x, y, d = dv, niter=niter)
 	hiddeninterp = hiddenfif(x, y, z, d = dv, h = hv, l = lv, m = mv, niter=niter)
 end
 

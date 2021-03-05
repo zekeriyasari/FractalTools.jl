@@ -13,7 +13,7 @@ y = f.(x)
 d = 0.1 * ones(length(x) - 1)
 
 # Construct interpolant 
-interp = fif(x, y, d, niter=10)
+interp = interpolate(x, y, d, niter=10)
 
 # Plot data 
 xd = collect(xi : 0.1dx : xf)

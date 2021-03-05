@@ -45,7 +45,7 @@ begin
 	dvar = d * ones(length(x) - 1)
 
 	# Interplate
-	interp = fif(x, y, dvar, niter=niter) 
+	interp = interpolate(x, y, dvar, niter=niter) 
 	
 	# Plots 
 	xd = collect(xi : 0.1dx : xf) 

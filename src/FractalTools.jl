@@ -6,9 +6,10 @@ using PyCall
 using LinearAlgebra
 using GeometryBasics
 using Clustering
-using AbstractPlotting
 using StaticArrays
 
+import AbstractPlotting
+import AbstractPlotting: @recipe
 import GeometryBasics: Ngon
 import Base: show, display
 import StatsBase: sample, Weights

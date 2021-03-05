@@ -43,14 +43,13 @@ isvalidpoint(pnt::Point, tess) = tess.find_simplex(pnt)[1] ≥ 0 && pnt !== Poin
 
 Returns a random valid point in `ngon`. `maxiters` is the number of iteration while finding the point. 
 """
-function getpoint(ngon::Ngon; maxiter::Int=100_000) 
+function getpoint(ngon::AbstractPolygon{Dim, T}; maxiter::Int=100_000) where {Dim, T}
     tess = spt.Delaunay(coordinates(ngon))
     A, b = box(ngon) 
     iter = 1 
     while iter ≤ maxiter 
-        val = A * rand(2) + b 
-        # pnt = Point(val[1], val[2]) 
-        pnt = Point(BigFloat(val[1]), BigFloat(val[2])) 
+        val = A * rand(T, 2) + b 
+        pnt = Point(val[1], val[2]) 
         isvalidpoint(pnt, tess) && return pnt
         iter += 1
     end 
@@ -98,117 +97,12 @@ function box(ngon::Ngon)
     A, b
 end
 
-"""
-    $SIGNATURES
-
-Returns the two-dimensional projections of the three-dimensional points `pnts3d`
-"""
-project(pnts3d::AbstractVector{<:Point}) = [Point(pnt[1], pnt[2]) for pnt in pnts3d]
-
-"""
-    $SIGNATURES
-
-Returns a two dimensional mesh whose points are the projections of `msh3`. 
-"""
-project(msh3::GeometryBasics.Mesh) = GeometryBasics.Mesh(project(msh3.position), copy(faces(msh3)))
-
-"""
-    $SIGNATURES
-
-Returns a tuple of a Delaunay tessellation and a correspoding three dimensional mesh. 
-"""
-function triangulate(pnts3d) 
-    pnts2d = project(pnts3d)
-    tess = spt.Delaunay(pnts2d)
-    trifaces = [TriangleFace(val...) for val in eachrow(tess.simplices .+ 1)]
-    tess, GeometryBasics.Mesh(pnts3d, trifaces)
-end 
-
-"""
-    $SIGNATURES 
-
-Returns the bounding triangle of the points `pnts3d`.
-"""
-function findouttriangle(pnts3d)
-    pnts2d = project(pnts3d)
-    # TODO: Call c code directly
-    # TODO: Check convecity and divide into convex dokmains.
-    hull = spt.ConvexHull(collect(hcat(collect.(pnts2d)...)') )
-    if length(hull.vertices) == 3
-        # If the convex hull is a triangle, just return the triangle 
-        Triangle(Point.(pnts3d[hull.vertices .+ 1])...)
-    else 
-        # If the the convex hull is not a triangle but a polygon, construct the 
-        # boundary polygon, construct a mesh from the polygon and return the 
-        # maximum triangle with the maximum area.
-        polygon = Ngon(
-            SVector{length(hull.vertices)}(Point.(pnts3d[hull.vertices .+ 1]))
-        )
-        msh = GeometryBasics.mesh(polygon)
-        idx = argmax([area(trig.points) for trig in msh])
-        msh[idx]
-    end 
-end
-
-"""
-    $SIGNATURES
-
-Returns a fractal surface interpolation function that interpolates `pnts3d`.
-"""
-function interpolate(pnts3d; α=0.01, f0 = (x, y) -> 0., maxiters=15, gettransforms::Bool=false)
-    # Fint convex hull, i.e, the boundary triangle 
-    outtrig = findouttriangle(pnts3d)
-
-    # Consruct a 3d mesh 
-    tess, msh3 = triangulate(pnts3d)
-
-    # Compute transforms 
-    transforms = map(intrig -> gettransform(outtrig, intrig, α), msh3)
-
-    # Define mapping 
-    # footprints = Point2{Float64}[]      # Uncomment to make a container for the footprints of any point 
-    function mapping(f)
-		function fnext(xd, yd)
-            pnt = Point(xd, yd)
-            # push!(footprints, pnt)
-			idx = tess.find_simplex(pnt)[1] + 1  
-            idx == 0 && return NaN 
-            transform = transforms[idx]
-            A, b = transform.A, transform.b
-			linv = A[1:2, 1:2] \ (pnt - b[1:2])
-			A[3, 1 : 2] ⋅ linv + α * f(linv[1], linv[2]) + b[3]
-        end
-	end 
-
-    # Main iteration of the fractal interpolation.
-    interpolant = ∘((mapping for i in 1 : maxiters)...)(f0)
-	gettransforms ? (interpolant, transforms) : interpolant
-	# gettransforms ? (interpolant, transforms, footprints) : (interpolant, footprints)
-end 
-
-"""
-    $SIGNATURES
-
-Returns a named tuple of `A` and` `b` such that `L(x) = A * x + b` maps `outtrig` to `intrig`. 
-"""
-function gettransform(outtrig, intrig, α::Real=1.) 
-    outmat = collect(hcat(coordinates(outtrig)...)')
-    inmat = collect(hcat(coordinates(intrig)...)')
-    inmat[:, end] -= α * outmat[:, end]
-    outmat[:, end] = ones(3)
-    sol = outmat \ inmat
-    (A = [  sol[1, 1]   sol[2, 1]   0;
-            sol[1, 2]   sol[2, 2]   0; 
-            sol[1, 3]   sol[2, 3]   α           ],
-    b = [   sol[3, 1],  sol[3, 2],  sol[3, 3]   ])
-end 
-
 
 # ---------------------------------- Plot recipe ------------------------------------------------------ # 
 
 
 @recipe(Trisurf, msh, f) do scene 
-    Attributes(
+    AbstractPlotting.Attributes(
         wireframe2 = false,
         wfcolor = :black,
         wflinewidth = 2,
@@ -224,8 +118,8 @@ end
 
 function AbstractPlotting.plot!(plt::Trisurf) 
     msh3 = plt[1][]
-    mesh!(plt, msh3, color=plt.meshcolor3, colormap=plt.colormap, visible=plt.visible) 
-    wireframe!(plt, msh3, linewidth=plt.wflinewidth3)
+    AbstractPlotting.mesh!(plt, msh3, color=plt.meshcolor3, colormap=plt.colormap, visible=plt.visible) 
+    AbstractPlotting.wireframe!(plt, msh3, linewidth=plt.wflinewidth3)
     plt
 end
 

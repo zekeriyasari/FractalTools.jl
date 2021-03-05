@@ -11,7 +11,7 @@ y = f.(x)
 d = 0.5 * ones(length(x) - 1)
 
 # Construct interpolation 
-interp = fif(x, y, d)
+interp = interpolate(x, y, d)
 ws = interp.ifs.ws
 
 # End points 

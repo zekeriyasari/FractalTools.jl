@@ -1,6 +1,6 @@
 # This file includes the tools for one - dimensional fractal interpolation 
 
-export Interval, AbstractInterpolant, Interpolant, fif, getifs, getintervals
+export Interval, AbstractInterpolant, Interpolant, interpolate, getifs, getintervals
 import Base.∈
 
 abstract type AbstractInterpolant end
@@ -46,20 +46,20 @@ One dimensional fractal interpolant
 
     $(TYPEDFIELDS)
 """
-struct Interpolant{T1<:IFS, T2<:AbstractVector{<:Interval}, T3} <: AbstractInterpolant
+struct Interpolant{T1<:IFS, T2<:AbstractVector, T3} <: AbstractInterpolant
     ifs::T1         # IFS of interpolations. Transformations are computed from the data 
-    intervals::T2   # Just-touching intervals 
+    domains::T2     # Just-touching domains 
     itp::T3         # Interpolant function 
 end 
 
-(interp::Interpolant)(x) = interp.itp(x)
+(interp::Interpolant)(args...) = interp.itp(args...)
 
 """
     $(SIGNATURES)
 
 Interpolates the data pairs (xi, yi) for xi ∈ `x` and yi ∈ y. `f0` is the initial function and `niter` is the number of iterations.
 """
-function fif(x::AbstractVector, y::AbstractVector; d::Union{<:Real, <:AbstractVector}, f0=zero, niter::Int=5)
+function interpolate(x::AbstractVector, y::AbstractVector; d::Union{<:Real, <:AbstractVector}, f0=zero, niter::Int=5)
     if d isa Real 
         d = fill(d, length(x) - 1)
     end 
@@ -67,14 +67,14 @@ function fif(x::AbstractVector, y::AbstractVector; d::Union{<:Real, <:AbstractVe
     # Construct IFS 
     ifs = getifs(x, y, d)
 
-    # Construct intervals 
-    intervals = getintervals(x) 
+    # Construct domains 
+    domains = getintervals(x) 
 
     # Construct itp 
     itp = ∘((wrap for i in 1 : niter)...)
 
     # Return interpolant 
-    Interpolant(ifs, intervals, itp((f0, ifs, intervals))[1])
+    Interpolant(ifs, domains, itp((f0, ifs, domains))[1])
 end
 
 """
@@ -99,7 +99,7 @@ end
 """
     $(SIGNATURES)
 
-Returns the just-touching intervals 
+Returns the just-touching domains 
 """
 getintervals(x::AbstractVector) = map(n -> Interval(x[n], x[n + 1]), 1 : length(x) - 1)
 
@@ -109,12 +109,12 @@ getintervals(x::AbstractVector) = map(n -> Interval(x[n], x[n + 1]), 1 : length(
    
 Functional that takes initiali function `func` and returns a wrapped function.
 """
-function wrap((func, ifs, intervals))
+function wrap((func, ifs, domains))
     function wrapped(x)
-        n = findfirst(I -> x ∈ I, intervals)
+        n = findfirst(I -> x ∈ I, domains)
         w = ifs.ws[n]
         (a, c, _, d), (e, f) = w.A, w.b
         ω = (x - e) / a 
         c * ω + d * func(ω) + f
-    end, ifs, intervals
+    end, ifs, domains
 end

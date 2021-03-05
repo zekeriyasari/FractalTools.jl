@@ -21,14 +21,14 @@ function hiddenfif(x::AbstractVector, y::AbstractVector, z::AbstractVector;
     # Construct IFS 
     ifs = gethiddenifs(x, y, z, h, d, l, m)
 
-    # Construct intervals 
-    intervals = getintervals(x) 
+    # Construct domains 
+    domains = getintervals(x) 
 
     # Construct itp 
     itp = ∘((wraphidden for i in 1 : niter)...)
 
     # Return interpolant 
-    Interpolant(ifs, intervals, itp((f0, ifs, intervals))[1])
+    Interpolant(ifs, domains, itp((f0, ifs, domains))[1])
 end
 
 """
@@ -57,12 +57,12 @@ end
    
 Functional that takes initiali function `func` and returns a wrapped function.
 """
-function wraphidden((func, ifs, intervals))
+function wraphidden((func, ifs, domains))
     function wrapped(x)
-        n = findfirst(I -> x ∈ I, intervals)
+        n = findfirst(I -> x ∈ I, domains)
         w = ifs.ws[n]
         (a, c, k, _, d, l, _, h, m), (e, f, g) = w.A, w.b
         ω = (x - e) / a 
         [d h; l m] * func(ω) + [c; k] * ω + [f, g]
-    end, ifs, intervals
+    end, ifs, domains
 end

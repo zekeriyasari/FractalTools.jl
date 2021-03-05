@@ -1,3 +1,4 @@
-1. Find the computationnal complexity with respect to number of points.
-2. Find the computationnal complexity with changing floating point precision.
-3. Find the relation between scaling factor
+1. Add hidden fractal interpolatiokn 
+3. Find the computationnal complexity with respect to number of points.
+4. Find the computationnal complexity with changing floating point precision.
+5. Find the relation between scaling factor

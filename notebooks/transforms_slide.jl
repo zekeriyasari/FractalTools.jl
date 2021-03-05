@@ -43,7 +43,7 @@ end
 # ╔═╡ 4abce91a-0490-11eb-0841-9d7d87776e2c
 # Construct interpolation 
 begin 
-	interp = fif(x, y, d)
+	interp = interpolate(x, y, d)
 	ws = interp.ifs.ws
 end
 
@@ -62,7 +62,7 @@ function transform_plot(dval, niters)
 		pc = vcat([mapslices(wt, pc, dims=2) for wt in ws]...)
 		plot!(pc[:, 1], pc[:, 2], label="tranformed_domain")
 	end
-	interp = fif(x, y, d, niter=niters)
+	interp = interpolate(x, y, d, niter=niters)
 	plot!(xt, interp.(xt))
 	scatter!(x, y, marker=(:circle, 3))
 	plt

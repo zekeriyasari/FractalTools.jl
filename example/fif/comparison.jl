@@ -16,7 +16,7 @@ l = 0.1 * ones(length(x) - 1)
 m = 0.1 * ones(length(x) - 1)
 
 # Interplate data 
-interp = fif(x, y, d)
+interp = interpolate(x, y, d)
 hiddeninterp = hiddenfif(x, y, z, d, h, l, m)
 hiddeninterp2 = hiddenfif(x, y, z2, d, h, l, m)
 
@@ -28,7 +28,7 @@ hidden_yd2 = hiddeninterp2.(xd)
 
 # Plots 
 plt = plot(layout=(2,1))
-plot!(xd, getindex.(yd, 1), label="fif", subplot=1, lw=5)
+plot!(xd, getindex.(yd, 1), label="interpolate", subplot=1, lw=5)
 scatter!(x, y, marker=(:circle, 5), subplot=1)
 plot!(xd, getindex.(hidden_yd, 1), label="hidden", subplot=1)
 scatter!(x, y, marker=(:circle, 5), subplot=1)

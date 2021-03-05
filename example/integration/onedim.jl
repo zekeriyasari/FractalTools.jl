@@ -10,7 +10,7 @@ g(t) = cos(2π * t)
 # f(t) = t * (1 - t)
 
 # Construct interpolation 
-interp = fif(t, f.(t), d=0.01)
+interp = interpolate(t, f.(t), d=0.01)
 
 # Construct hidden interpolation 
 hiddeninterp = hiddenfif(t, f.(t), g.(t)) 
