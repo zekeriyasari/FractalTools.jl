@@ -175,14 +175,14 @@ function _getmapping(transform, method::HInterp1D)
     (linv, F)
 end 
 
-function _getmapping(transforms, method::Interp2D)
+function _getmapping(transform, method::Interp2D)
     (a11, a21, a31, a12, a22, a32, _, _, a33), (b1, b2, b3) = transform.A, transform.b
     linv = (x, y) -> [a11 a12; a21 a22] \ ([x, y] - [b1, b2])
     F = (x, y, z) ->  a31 * x + a32 * y + a33 * z + b3
     (linv, F)
 end 
 
-function _getmapping(transforms, method::HInterp2D)
+function _getmapping(transform, method::HInterp2D)
     (a11, a21, a31, a41, a12, a22, a32, a42, _, _, a33, a34, _, _, a43, a44), (b1, b2, b3, b4) = transform.A, transform.b
     linv = (x, y) -> [a11 a12; a21 a22] \ ([x, y] - [b1, b2])
     F = (x, y, z, t) ->  [a31 a32 a33 a34; a41 a42 a43 a44] * [x, y, z, t] + [b3, b4]
@@ -190,7 +190,7 @@ function _getmapping(transforms, method::HInterp2D)
 end 
 
 locate(pnt::AbstractPoint{1, T}, tess::LineString) where T = findfirst(((p1, p2),) -> p1[1] ≤ pnt[1] ≤ p2[1], tess)
-locate(pnt::AbstractArray{2, T}, tess::PyObject)  where T  = tess.find_simplex(pnt)[1] + 1  
+locate(pnt::AbstractPoint{2, T}, tess::PyObject)  where T  = tess.find_simplex(pnt)[1] + 1  
 
 wrap(f0, tess::Tessellation, mappings::AbstractVector{<:Tuple{T, S}}, niter::Int) where {T, S} = 
     ((f0, tess, mappings)) |> ∘((wrapper for i in 1 : niter)...) 
