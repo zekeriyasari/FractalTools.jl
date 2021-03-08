@@ -1,7 +1,6 @@
 # This file includes the iterated function system (IFS) toos. 
 
-export IFS 
-export DetAlg, RandAlg, Attractor, attractor, detalg, randalg
+export IFS, DetAlg, RandAlg, Attractor, attractor, detalg, randalg
 
 """ 
     $(TYPEDEF) 
@@ -12,13 +11,15 @@ Iterated fucntion sytem (IFS)
 
     $(TYPEDFIELDS)
 """
-struct IFS{T1, T2}
+struct IFS{T1<:AbstractVector{<:Transformation}, T2<:AbstractVector{<:Real}}
+    "Vector of transformations of IFS"
     ws::T1 
+    "Vector of probabilities of IFS"
     probs::T2
-    function IFS(ws::AbstractVector{T1}, probs::AbstractVector{T2}) where {T1<:Transformation, T2<:Real} 
+    function IFS(ws::T1, probs::T2) where {T1, T2} 
         # Note: For the floating point numbers, aproximation(≈), instead of exact equal (==), should be considered
         sum(probs) ≈ 1 || throw(ArgumentError("Sum of probabilities must be 1."))
-        new{typeof(ws), typeof(probs)}(ws, probs) 
+        new{T1, T2}(ws, probs) 
     end
 end
 IFS(ws) = (n = length(ws); IFS(ws, 1  / n * ones(n))) 
@@ -53,7 +54,7 @@ struct RandAlg end
 
 """
     $TYPEDEF
-    
+
 Attractor of `IFS` type 
 
 # Fields
@@ -78,35 +79,40 @@ end
 """
     $SIGNATURES
 
-Computes the attractor of `ifs`. If `alg` is of type `DetAlg`, the deterministic algorithm is used. If `alg` is of type `RandAlg`,
-random algorithm is used. `kwargs` may include
+Computes the attractor of `ifs`. If `alg` is of type `DetAlg`, the deterministic algorithm is used. If `alg` is of type
+`RandAlg`, random algorithm is used. `kwargs` may include
 
 * `numiter::Int` : Number of iterations to used to calcuate the attractor (defaults to 10)
 
-* `numtransient::Int` : Number of transient iterations to used to calcuate a transient set. When the transient set is constructed, the computation of attractor is continued with distributed computation if `alg` is `RandAlg` and `parallel` is `true`. (defaults to 10)
+* `numtransient::Int` : Number of transient iterations to used to calcuate a transient set. When the transient set is
+  constructed, the computation of attractor is continued with distributed computation if `alg` is `RandAlg` and `parallel` is
+  `true`. (defaults to 10)
 
 * `parallel::Bool`: If  `true`, the attractor is computed using distrbuted computation. (defaults to false)
 
-* `placedependent::Bool` : If `true`, place dependent attractor is computed if α and β is given accordingly. (default to false)
+* `placedependent::Bool` : If `true`, place dependent attractor is computed if α and β is given accordingly. (default to
+  false)
 
 * `α::AbstractVector` : Place-dependent probility coefficient(defaults to nothing)
 
 * `β::AbstractVector` : Place-dependent probility coefficient. (default to nothing)
 """
-attractor(ifs, initset; alg=DetAlg(), kwargs...) = typeof(alg) == DetAlg ? detalg(ifs,initset; kwargs...) : randalg(ifs,initset; kwargs...)
+attractor(ifs, initset; alg=DetAlg(), kwargs...) = typeof(alg) == DetAlg ? 
+                                                   detalg(ifs,initset; kwargs...) : 
+                                                   randalg(ifs,initset; kwargs...)
 
 """
     $SIGNATURES
 
-Computes the attractor of `ifs` with deterministic algorithm.`numiter` is number of iterations. (Defaults to 10). If `parallel` is true, attractor is computed via parallel computation.
+Computes the attractor of `ifs` with deterministic algorithm.`numiter` is number of iterations. (Defaults to 10). If
+`parallel` is true, attractor is computed via parallel computation.
 """
 function detalg(ifs, initset; numiter=10, parallel=false)
-    if parallel
-        set = detalg_parallel(ifs.ws, copy(initset), numiter)
-    else
-        set = detalg_sequential(ifs.ws, copy(initset), numiter)
-    end
-    return Attractor(ifs, DetAlg(), initset, set, numiter, parallel)
+    copiedset = copy(initset)
+    set = parallel ? 
+          detalg_parallel(ifs.ws, copiedset, numiter) : 
+          detalg_sequential(ifs.ws, copiedset, numiter)
+    Attractor(ifs, DetAlg(), initset, set, numiter, parallel)
 end
 
 # Computes the attractor of an ifs via deterministic algorithm sequentially. 
@@ -114,7 +120,7 @@ function detalg_sequential(ws, set, numiter)
     for i in 1 : numiter
         set = vcat(map(w -> w.(set), ws)...)
     end
-    return set
+    set
 end
 
 # Computes the attractor of an ifs via deterministic algorithm in parallel. 
@@ -123,13 +129,16 @@ function detalg_parallel(ws, set, numiter)
     for i in 1 : numiter
         set = vcat(map(w -> pmap(w, set), ws)...)
     end
-    return set
+    set
 end
 
 """
     $SIGNATURES
 
-Computes the attractor of `ifs` with random algorithm.`numiter` is number of iterations. (Defaults to 100). `numtransient` is the number of transient iterations. If `parallel` is true, attractor is computed via parallel computation. If `placedependent` is true, the probabilties of the ifs are dependent on the coordinates `x`. This dependency `p(x)` is given via the parameters `α` and `β` where p(x) = α x + β.
+Computes the attractor of `ifs` with random algorithm.`numiter` is number of iterations. (Defaults to 100). `numtransient` is
+the number of transient iterations. If `parallel` is true, attractor is computed via parallel computation. If
+`placedependent` is true, the probabilties of the ifs are dependent on the coordinates `x`. This dependency `p(x)` is given
+via the parameters `α` and `β` where p(x) = α x + β.
 """
 function randalg(ifs, initset; numiter=100, numtransient=10, parallel=false, placedependent=false, α=nothing, β=nothing)
     ws = ifs.ws
@@ -149,7 +158,7 @@ function randalg(ifs, initset; numiter=100, numtransient=10, parallel=false, pla
             set = randalg_sequential(ws, copy(initset), numiter, probs)
         end
     end
-    return Attractor(ifs, RandAlg(), initset, set, numiter, parallel)
+    Attractor(ifs, RandAlg(), initset, set, numiter, parallel)
 end
 
 # Computes the attractor of an ifs via random algorithm sequentially. 
@@ -161,7 +170,7 @@ function randalg_sequential(ws, set, numiter, probs)
         xi = trfmi(xi)
         push!(set, xi)
     end
-    return set
+    set
 end
 
 
@@ -174,7 +183,7 @@ function randalg_sequential_pd(ws, set, numiter, probs, α, β)
         probs = α * xi + β
         push!(set, xi)
     end
-    return set
+    set
 end
 
 # Computes the attractor of an ifs via random algorithm in parallel. 
@@ -190,8 +199,8 @@ function randalg_parallel_pd(ws, set, numiter, probs, α, β)
     vcat(pmap(process_chunk_pd, [(ws, set, floor(Int, numiter / nworkers()), probs, α, β) for i =  1 : nworkers()])...)
 end
 
-# `process_chunk` is the worker function that is used in all processes(both in master and worker process).
-# when calculating the attractor if alg is `RandAlg` and `parallel` is true.
+# `process_chunk` is the worker function that is used in all processes(both in master and worker process). when calculating
+# the attractor if alg is `RandAlg` and `parallel` is true.
 function process_chunk(ws_set_niter_weights)
     ws, set, niter, weights = ws_set_niter_weights
     xi = set[end]
@@ -203,8 +212,8 @@ function process_chunk(ws_set_niter_weights)
     set
 end
 
-# `process_chunk` is the worker function that is used in all processes(both in master and worker process).
-# when calculating the attractor if alg is `RandAlg` and `parallel` is true with placedependent probabilties.
+# `process_chunk` is the worker function that is used in all processes(both in master and worker process). when calculating
+# the attractor if alg is `RandAlg` and `parallel` is true with placedependent probabilties.
 function process_chunk_pd(ws_set_niter_probs_alpha_beta)
     ws, set, niter, probs, α, β = ws_set_niter_probs_alpha_beta
     xi = set[end]

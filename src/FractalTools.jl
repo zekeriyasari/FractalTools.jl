@@ -14,7 +14,7 @@ import GeometryBasics: Ngon
 import Base: show, display
 import StatsBase: sample, Weights
 
-include("mesh.jl")
+include("generators.jl")
 
 include("ifs/transformations.jl")
 include("ifs/ifs.jl")
