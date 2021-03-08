@@ -1,6 +1,8 @@
 # This includes interpolation methods 
 
-const PointVector{Dim} = AbstractVector{<:AbstractPoint{Dim, T}} 
+export Interp1D, Interp2D, HInterp1D, HInterp2D, interpolate
+
+const PointVector{Dim} = AbstractVector{<:AbstractPoint{Dim, T}} where {T}
 const Tessellation = Union{<:LineString, <:PyObject}
 
 abstract type AbstractInterp end
@@ -29,13 +31,19 @@ struct Interpolant{T1<:IFS, T2, T3<:AbstractInterp}
     method::T3 
 end 
 
+(interp::Interpolant)(x...) = interp.itp(x...)
+
+interpolate(pts::AbstractVector{<:AbstractVector{<:Real}}, method::AbstractInterp; f0 = getinitf(method), niter::Int = 10) = 
+    interpolate(map(pnt -> Point(pnt...), pts), method, f0=f0, niter=niter)
+
 function interpolate(pts::PointVector, method::AbstractInterp; f0 = getinitf(method), niter::Int = 10) 
     tess = tessellate(pts, method)
     transforms = gettransforms(pts, method)
     mappings = getmappings(transforms, method)
-    itp = wrap(f0, tess, mappings)[1]
+    itp = wrap(f0, tess, mappings, niter)[1]
     Interpolant(IFS(transforms), itp, method)
 end 
+
 
 getinitf(::Interp1D)   = x -> 0. 
 getinitf(::HInterp1D)  = x -> [0., 0.]
@@ -43,17 +51,17 @@ getinitf(::Interp2D)   = (x, y) -> 0.
 getinitf(::HInterp2D)  = (x, y) -> [0., 0.] 
 
 
-project(pts::AbstractPoint, drop::Int=1) = [Point(pnt[1 : end - drop]...) for pnt in pts]
-project(pts::AbstractPoint{2}, ::Interp1D)   = project(pts, 1)
-project(pts::AbstractPoint{3}, ::HInterp1D)  = project(pts, 2)
-project(pts::AbstractPoint{3}, ::Interp2D)   = project(pts, 1)
-project(pts::AbstractPoint{4}, ::HInterp2D)  = project(pts, 2)
+project(pts::PointVector, drop::Int=1) = [Point(pnt[1 : end - drop]...) for pnt in pts]
+project(pts::PointVector{2}, ::Interp1D)   = project(pts, 1)
+project(pts::PointVector{3}, ::HInterp1D)  = project(pts, 2)
+project(pts::PointVector{3}, ::Interp2D)   = project(pts, 1)
+project(pts::PointVector{4}, ::HInterp2D)  = project(pts, 2)
 
 
-tessellate(pts::PointVector{2}, ::Interp1D)  = LineString(project(pts, method))
-tessellate(pts::PointVector{3}, ::HInterp1D) = LineString(project(pts, method)) 
-tessellate(pts::PointVector{3}, ::Interp2D)  = spt.Delaunay(project(pts, method))
-tessellate(pts::PointVector{4}, ::HInterp2D) = spt.Delaunay(project(pts, method))
+tessellate(pts::PointVector{2}, method::Interp1D)  = LineString(project(pts, method))
+tessellate(pts::PointVector{3}, method::HInterp1D) = LineString(project(pts, method)) 
+tessellate(pts::PointVector{3}, method::Interp2D)  = spt.Delaunay(project(pts, method))
+tessellate(pts::PointVector{4}, method::HInterp2D) = spt.Delaunay(project(pts, method))
 
 
 partition(pts::PointVector, method::AbstractCurveInterp) = LineString(pts) 
@@ -83,10 +91,10 @@ function getboundary(pts::PointVector, ::AbstractSurfaceInterp)
 end 
 
 
-function gettransforms(pts::AbstractPoint, method::AbstractInterp) 
+function gettransforms(pts::PointVector, method::AbstractInterp) 
     parts = partition(pts, method)
     n = length(parts)
-    freevars = typeof(method.freevars) <: AbstractVector ? method.freevars : fill(method.freevars, n - 1)
+    freevars = typeof(method.freevars) <: AbstractVector ? method.freevars : fill(method.freevars, n)
     boundary = getboundary(pts, method)
     map(((domain, freevar),) -> _gettransform(boundary, domain, freevar), zip(parts, freevars))
 end 
@@ -181,17 +189,18 @@ function _getmapping(transforms, method::HInterp2D)
     (linv, F)
 end 
 
-locate(pnt::AbstractPoint{1, T}, tess::LineString) where T = findfirst(line -> line[1] ≤ pnt ≤ line[2], tess)
+locate(pnt::AbstractPoint{1, T}, tess::LineString) where T = findfirst(((p1, p2),) -> p1[1] ≤ pnt[1] ≤ p2[1], tess)
 locate(pnt::AbstractArray{2, T}, tess::PyObject)  where T  = tess.find_simplex(pnt)[1] + 1  
 
-wrap(f0, tess::Tessellation, mappings::AbstractVector{<:NTuple{2}}, niter::Int) = 
-    (f0, tess, mappings) |> ∘((wrapper for i in 1 : niter)...) 
+wrap(f0, tess::Tessellation, mappings::AbstractVector{<:Tuple{T, S}}, niter::Int) where {T, S} = 
+    ((f0, tess, mappings)) |> ∘((wrapper for i in 1 : niter)...) 
 
 function wrapper((f, tess, mappings))
     function fnext(x...) 
         pnt = Point(x...) 
         n = locate(pnt, tess)
         linv, F = mappings[n]
-        (x...) -> (val = linv(x...); F(val..., f(val...)))
+        val = linv(x...) 
+        F(val..., f(val...))
     end, tess, mappings
 end
