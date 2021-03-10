@@ -8,7 +8,8 @@ export getdata, getpoint
 Returns a three-dimensional interpolation data `pnts`. `pnts` is a vector of three-dimensional points `pi = Point(xi, yi,
 zi)` where `xi` and `yi` are from the dispersed points and `zi = f(xi, yi)`. 
 """
-getdata(f, ngon::Ngon, npts::Int) = [Point(pnt[1], pnt[2], f(pnt[1], pnt[2])) for pnt in disperse(ngon, npts)] 
+getdata(f, ngon::Ngon, npts::Int) = [Point(pnt..., f(pnt...)) for pnt in disperse(ngon, npts)] 
+getdata(ngon::Ngon, npts::Int) = disperse(ngon, npts)
 
 """
     $SIGNATURES
@@ -20,8 +21,8 @@ function getpoint(ngon::AbstractPolygon{Dim, T}; maxiter::Int=100_000) where {Di
     A, b = boundboxtransforms(ngon) 
     iter = 1 
     while iter ≤ maxiter 
-        val = A * rand(T, 2) + b 
-        pnt = Point(val[1], val[2]) 
+        val = A * rand(T, Dim) + b 
+        pnt = Point(val...) 
         isvalidpoint(pnt, tess) && return pnt
         iter += 1
     end 

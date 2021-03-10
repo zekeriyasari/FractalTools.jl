@@ -1,6 +1,6 @@
 # This file includes IFS tools.
 
-export Transformation, IFS, attractor, DetAlg, RandAlg, dimension, contfactor
+export IFS, attractor, DetAlg, RandAlg, dimension, contfactor
 
 """ 
     $(TYPEDEF) 

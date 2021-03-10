@@ -24,20 +24,23 @@ function AbstractPlotting.plot!(plt::Trisurf)
     plt
 end
 
-function AbstractPlotting.convert_arguments(::Type{<:Trisurf}, msh2::GeometryBasics.Mesh, f::Function)
-    msh3 = GeometryBasics.Mesh([Point(pnt[1], pnt[2], f(pnt[1], pnt[2])) for pnt in msh2.position], faces(msh2))
+function AbstractPlotting.convert_arguments(::Type{<:Trisurf}, msh2::GeometryBasics.Mesh, f)
+    msh3 = GeometryBasics.Mesh([Point(pnt..., f(pnt...)) for pnt in msh2.position], faces(msh2))
     return (msh3, msh2, f)
 end 
 
-function AbstractPlotting.convert_arguments(::Type{<:Trisurf}, pnts::AbstractVector{<:Point2}, f::Function) 
+function AbstractPlotting.convert_arguments(::Type{<:Trisurf}, pnts::AbstractVector{<:AbstractPoint{2,T}}, f) where T 
+    @info "Here"
     tess = spt.Delaunay(pnts) 
-    _position = [Point(pnt[1], pnt[2], f(pnt[1], pnt[2])) for pnt in eachrow(tess.points)]
+    _position = [Point(pnt..., f(pnt...)) for pnt in eachrow(tess.points)]
     _faces = [TriangleFace(val[1], val[2], val[3]) for val in eachrow(tess.simplices .+ 1)]
     msh3 = GeometryBasics.Mesh(_position, _faces)
     return (msh3, pnts, f)
 end 
 
-function AbstractPlotting.convert_arguments( ::Type{<:Trisurf}, pnts2d::AbstractVector{<:Point2}, pnts1d::AbstractVector{<:Point1})
+function AbstractPlotting.convert_arguments(::Type{<:Trisurf}, 
+                                            pnts2d::AbstractVector{<:AbstractPoint{2,T}}, 
+                                            pnts1d::AbstractVector{<:Point1}) where {T}
     tess = spt.Delaunay(pnts2d) 
     _position = [Point(pnt2[1], pnt2[2], pnt1[1]) for (pnt2, pnt1) in zip(pnts2d, pnts1d)]
     _faces = [TriangleFace(val[1], val[2], val[3]) for val in eachrow(tess.simplices .+ 1)]
@@ -45,7 +48,8 @@ function AbstractPlotting.convert_arguments( ::Type{<:Trisurf}, pnts2d::Abstract
     return (msh3, pnts2d, pnts1d)
 end 
 
-function AbstractPlotting.convert_arguments( ::Type{<:Trisurf}, pnts3d::AbstractVector{<:Point3})
+function AbstractPlotting.convert_arguments(::Type{<:Trisurf}, 
+                                            pnts3d::AbstractVector{<:AbstractPoint{3, T}}) where {T}
     pnts2d = project(pnts3d)
     tess = spt.Delaunay(pnts2d) 
     fcs = [TriangleFace(val[1], val[2], val[3]) for val in eachrow(tess.simplices .+ 1)]

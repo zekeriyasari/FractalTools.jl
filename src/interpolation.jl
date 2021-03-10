@@ -199,6 +199,8 @@ function wrapper((f, tess, mappings))
     function fnext(x...) 
         pnt = Point(x...) 
         n = locate(pnt, tess)
+        @show n 
+        n == 0 && error("Point $pnt cannot be found.")
         linv, F = mappings[n]
         val = linv(x...) 
         F(val..., f(val...))
