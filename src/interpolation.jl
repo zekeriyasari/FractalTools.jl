@@ -25,7 +25,8 @@ struct HInterp2D{T<:Union{<:AbstractMatrix, <:AbstractVector{<:AbstractMatrix}}}
     freevars::T 
 end 
 
-struct Interpolant{T1<:IFS, T2, T3<:AbstractInterp}
+# Note: For plotting recipes, Interpolant should a subtype of Function
+struct Interpolant{T1<:IFS, T2, T3<:AbstractInterp} <: Function 
     ifs::T1 
     itp::T2 
     method::T3 
@@ -189,8 +190,8 @@ function _getmapping(transform, method::HInterp2D)
     (linv, F)
 end 
 
-locate(pnt::AbstractPoint{1, T}, tess::LineString) where T = findfirst(((p1, p2),) -> p1[1] ≤ pnt[1] ≤ p2[1], tess)
-locate(pnt::AbstractPoint{2, T}, tess::PyObject)  where T  = tess.find_simplex(pnt)[1] + 1  
+locate(pnt::AbstractPoint{1, T}, tess::LineString) where {T} = findfirst(((p1, p2),) -> p1[1] ≤ pnt[1] ≤ p2[1], tess)
+locate(pnt::AbstractPoint{2, T}, tess::PyObject)   where {T} = tess.find_simplex(pnt)[1] + 1  
 
 wrap(f0, tess::Tessellation, mappings::AbstractVector{<:Tuple{T, S}}, niter::Int) where {T, S} = 
     ((f0, tess, mappings)) |> ∘((wrapper for i in 1 : niter)...) 
@@ -199,7 +200,6 @@ function wrapper((f, tess, mappings))
     function fnext(x...) 
         pnt = Point(x...) 
         n = locate(pnt, tess)
-        @show n 
         n == 0 && error("Point $pnt cannot be found.")
         linv, F = mappings[n]
         val = linv(x...) 

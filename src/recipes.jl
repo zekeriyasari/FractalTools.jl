@@ -29,23 +29,16 @@ function AbstractPlotting.convert_arguments(::Type{<:Trisurf}, msh2::GeometryBas
     return (msh3, msh2, f)
 end 
 
-function AbstractPlotting.convert_arguments(::Type{<:Trisurf}, pnts::AbstractVector{<:AbstractPoint{2,T}}, f) where T 
-    @info "Here"
-    tess = spt.Delaunay(pnts) 
-    _position = [Point(pnt..., f(pnt...)) for pnt in eachrow(tess.points)]
-    _faces = [TriangleFace(val[1], val[2], val[3]) for val in eachrow(tess.simplices .+ 1)]
-    msh3 = GeometryBasics.Mesh(_position, _faces)
-    return (msh3, pnts, f)
+function AbstractPlotting.convert_arguments(plt::Type{<:Trisurf}, 
+                                            pnts::AbstractVector{<:AbstractPoint{2,T}}, 
+                                            f::Function) where T
+    AbstractPlotting.convert_arguments(plt, pnts, map(pnt -> Point(f(pnt...)...), pnts))
 end 
 
-function AbstractPlotting.convert_arguments(::Type{<:Trisurf}, 
+function AbstractPlotting.convert_arguments(plt::Type{<:Trisurf}, 
                                             pnts2d::AbstractVector{<:AbstractPoint{2,T}}, 
-                                            pnts1d::AbstractVector{<:Point1}) where {T}
-    tess = spt.Delaunay(pnts2d) 
-    _position = [Point(pnt2[1], pnt2[2], pnt1[1]) for (pnt2, pnt1) in zip(pnts2d, pnts1d)]
-    _faces = [TriangleFace(val[1], val[2], val[3]) for val in eachrow(tess.simplices .+ 1)]
-    msh3 = GeometryBasics.Mesh(_position, _faces)
-    return (msh3, pnts2d, pnts1d)
+                                            pnts1d::AbstractVector{<:Point1}) where {T} 
+    AbstractPlotting.convert_arguments(plt, [Point(pnt2[1], pnt2[2], pnt1[1]) for (pnt2, pnt1) in zip(pnts2d, pnts1d)])
 end 
 
 function AbstractPlotting.convert_arguments(::Type{<:Trisurf}, 

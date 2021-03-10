@@ -14,15 +14,19 @@ npts = 100
 pts = getdata(f, ngon, npts)
 interp = interpolate(pts, Interp2D(0.01))
 
+function err(x, y)
+    fval = f(x, y) 
+    ival = interp(x, y) 
+    abs(fval - ival) / abs(fval) * 100
+end
+
 tpts = getdata(ngon, npts)
 
 fvals = map(pnt -> Point(f(pnt...)...), tpts)
 ivals = map(pnt -> Point(interp(pnt...)...), tpts)
-evals = (fvals - ivals) ./ abs.(fvals) * 100)
-@show maximum(evals)
 
 
-fig, ax, plt = trisurf(tpts, ivals, meshcolor3=last.(fvals), colormap=:viridis)
-trisurf!(ax, tpts, ivals, meshcolor3=last.(ivals), colormap=:heat)
+fig, ax, plt = trisurf(tpts, f, meshcolor3=:red)
+trisurf!(ax, tpts, interp, meshcolor3=:blue)
 trisurf(tpts, evals, meshcolor3=last.(evals), colormap=:viridis)
 
