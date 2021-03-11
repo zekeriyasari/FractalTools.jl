@@ -14,7 +14,7 @@ import GeometryBasics: Ngon
 import Base: show, display
 import StatsBase: sample, Weights
 
-include("generators.jl")
+include("datagenerators.jl")
 include("recipes.jl")
 include("ifs.jl")
 include("interpolation.jl")
