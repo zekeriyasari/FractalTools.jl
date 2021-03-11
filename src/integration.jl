@@ -30,12 +30,9 @@ function evaluate(transforms::AbstractVector{<:Transformation}, method::HInterp1
     J   = abs.(a11)
     K1  = (x[end]^2 - x[1]^2) / 2 
     K2  = (x[end] - x[1]) / 2
-    W11 = sum(a22 .* J)
-    W12 = sum(a23 .* J) 
-    W21 = sum(a32 *. J) 
-    W22 = sum(a33 .* J) 
-    Λ1  = sum((a21 * K1 + b2 * K2) .* J)
-    Λ2  = sum((a31 * K1 + b3 * K2) .* J)
+
+    W11 = sum(a22 .* J);    W12 = sum(a23 .* J);    Λ1  = sum((a21 * K1 + b2 * K2) .* J)
+    W21 = sum(a32 *. J);    W22 = sum(a33 .* J);    Λ2  = sum((a31 * K1 + b3 * K2) .* J) 
 
     A = [1 - W11    -W12; 
          -W12       1 - W22]
@@ -46,14 +43,6 @@ end
 
 # Interp2D
 function evaluate(transforms::AbstractVector{<:Transformation}, method::Interp2D)
-    x = getindex.(pts, 1)
-    y = getindex.(pts, 2)
-    (a11, a21, a31, _, a22, a32, _, a23, a33), (b1, b2, b3) = extract(transforms)
-
-end 
-
-# HInterp2D
-function evaluate(transforms::AbstractVector{<:Transformation}, method::HInterp2D)
     (x1, y1), (x2, y2), (x3, y3) = getboundary(pts, method) 
 
     k11 = x2 - x1;      k12 = x3 - x1;      l1 = x1 
@@ -69,6 +58,11 @@ function evaluate(transforms::AbstractVector{<:Transformation}, method::HInterp2
     num = JT / 6 * sum(JL .* (a31 * Δ1 + a32 * Δ2 + 3 * b3))
     denum = 1 - sum(JL .* a33)
     num / denum
+end 
+
+# HInterp2D
+function evaluate(transforms::AbstractVector{<:Transformation}, method::HInterp2D)
+    
 end 
 
 function extract(transforms::AbstractVector{<:Transformation})
