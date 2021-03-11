@@ -18,6 +18,7 @@ include("datagenerators.jl")
 include("recipes.jl")
 include("ifs.jl")
 include("interpolation.jl")
+include("integration.jl")
 
 # include("ifs/transformations.jl")
 # include("ifs/ifs.jl")
